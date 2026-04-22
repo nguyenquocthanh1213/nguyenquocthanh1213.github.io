@@ -1,0 +1,376 @@
+Ok, mình đã chỉnh lại đúng 2 ý bạn muốn:
+- Các bar “nền” (từ audio bình thường) được thu nhỏ đáng kể.
+- Hiệu ứng domino thành một “núm tròn” chạy dọc cung — bar ở gần “đầu sóng” sẽ tăng dần rồi giảm dần (envelope tròn), nhìn như một nút tròn di chuyển từ -π/2 → π/2. Vẫn giữ “càng lên càng cao”.
+
+Lưu file này thành .html và mở bằng Chrome/Edge.
+
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Round Visualizer — Half Mirror + Rounded Domino</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: dark; }
+    html, body {
+      margin: 0; height: 100%;
+      background: #0b0f1a; color: #cfe6ff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+    #app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+    #controls {
+      display: flex; gap: 12px; align-items: center; padding: 10px 14px;
+      background: linear-gradient(180deg,#0b0f1a,#0b0f1acc 60%,transparent);
+      border-bottom: 1px solid #152033;
+    }
+    #controls button, #controls label {
+      background: #142137; color: #cbe3ff; border: 1px solid #213251;
+      border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600;
+    }
+    #controls button:hover, #controls label:hover { background: #1a2b46; }
+    #controls input[type="file"] { display: none; }
+    canvas { width: 100vw; height: 100vh; display: block; }
+    .hint { opacity: .8; font-size: 12px; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="controls">
+      <button id="btnStart">Start</button>
+      <label for="filePick">Chọn file audio</label>
+      <input id="filePick" type="file" accept="audio/*" />
+      <button id="btnMic">Dùng micro</button>
+      <button id="btnPause">Pause/Resume</button>
+      <span class="hint">Hiệu ứng “núm tròn” chạy từ -π/2 → π/2; bar nền đã thu nhỏ.</span>
+    </div>
+    <canvas id="c"></canvas>
+  </div>
+
+  <script>
+    // ============ Cấu hình ============ //
+    const OPT = {
+      barsPerSemi: 64,
+      baseRadiusRatio: 0.28,
+      lineWidth: 4,
+
+      // Thu nhỏ phần bars nền (từ phổ audio)
+      barAudioGain: 0.35,       // giảm mạnh gain nền
+      barMaxFromAudio: 70,      // trần chiều dài nền (nhỏ)
+
+      // Domino (nổi bật hơn)
+      dominoMaxHeight: 180,     // biên độ cộng thêm lớn để nổi bật
+      dominoRadius: 0.12,       // bán kính "núm" theo t (0..1), vùng tác động hai phía quanh đầu sóng
+      dominoBaseSpeed: 0.75,
+      dominoSpeedGain: 1.35,
+      minBeatGap: 0.25,
+
+      // Bass detection
+      bassLowHz: 20,
+      bassHighHz: 150,
+
+      smoothing: 0.8,
+      fftSize: 2048,
+      bg: "#0b0f1a",
+      barColor: "#59cfff",
+      barColorDomino: "#ffc766",
+      centerGlow: true
+    };
+
+    // ============ Biến toàn cục ============ //
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+    let audioCtx = null;
+    let analyser = null;
+    let sourceNode = null;
+    let freqData = null;
+
+    let usingMic = false;
+    let audioEl = null;
+
+    let lastTime = performance.now();
+    let running = false;
+
+    // Lịch sử bass để bắt beat
+    const bassHistory = [];
+    const bassHistorySize = 45;
+    let lastBeatAt = -1;
+
+    // Các sự kiện domino (đầu sóng chạy 0..1)
+    const dominoEvents = [];
+
+    // smoothing cho mỗi bar
+    let barSmooth = [];
+
+    // ============ Canvas ============ //
+    function resize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    // ============ Web Audio ============ //
+    async function ensureAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") await audioCtx.resume();
+    }
+    function setupAnalyser() {
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = OPT.fftSize;
+      analyser.smoothingTimeConstant = OPT.smoothing;
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+    }
+    function connectFromMediaElement(mediaEl) {
+      if (sourceNode) try { sourceNode.disconnect(); } catch {}
+      sourceNode = audioCtx.createMediaElementSource(mediaEl);
+      sourceNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+    async function connectFromMic() {
+      if (sourceNode) try { sourceNode.disconnect(); } catch {}
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      sourceNode = audioCtx.createMediaStreamSource(stream);
+      sourceNode.connect(analyser);
+    }
+    function freqToIndex(freqHz) {
+      const nyquist = audioCtx.sampleRate / 2;
+      return Math.min(
+        analyser.frequencyBinCount - 1,
+        Math.max(0, Math.round(freqHz / nyquist * analyser.frequencyBinCount))
+      );
+    }
+    function getBassEnergy() {
+      if (!freqData) return 0;
+      const start = freqToIndex(OPT.bassLowHz);
+      const end = freqToIndex(OPT.bassHighHz);
+      let sum = 0, count = 0;
+      for (let i = start; i <= end; i++) { sum += freqData[i]; count++; }
+      return count ? sum / count : 0;
+    }
+
+    // ============ Beat detection ============ //
+    function detectBassBeat(now, bassVal) {
+      bassHistory.push(bassVal);
+      if (bassHistory.length > bassHistorySize) bassHistory.shift();
+
+      let mean = 0; for (const v of bassHistory) mean += v;
+      mean /= Math.max(1, bassHistory.length);
+      let variance = 0; for (const v of bassHistory) { const d = v - mean; variance += d * d; }
+      variance /= Math.max(1, bassHistory.length);
+      const std = Math.sqrt(variance);
+
+      const canTrigger = (lastBeatAt < 0) || ((now - lastBeatAt) > OPT.minBeatGap * 1000);
+      const isBeat = canTrigger && (bassVal > mean + 1.2 * std) && (bassVal > 35);
+      if (isBeat) {
+        lastBeatAt = now;
+        const norm = Math.max(0, Math.min(1, (bassVal - mean) / (std + 1e-6)));
+        spawnDomino(norm);
+      }
+    }
+
+    // ============ Domino (núm tròn) ============ //
+    function spawnDomino(intensity01) {
+      dominoEvents.push({
+        progress: 0,  // 0..1, chạy dọc cung -π/2 → π/2
+        speed: OPT.dominoBaseSpeed + OPT.dominoSpeedGain * intensity01,
+        radius: OPT.dominoRadius,   // bán kính ảnh hưởng hai phía quanh đầu sóng
+        amp: Math.min(1, 0.6 + 0.6 * intensity01)
+      });
+    }
+    // Envelope "núm tròn" (raised-cosine) — tròn, mượt, max ở tâm, về 0 ở rìa
+    function roundedBump(dist, radius) {
+      if (dist > radius) return 0;
+      return 0.5 * (1 + Math.cos(Math.PI * dist / radius));
+    }
+
+    // ============ Render ============ //
+    function render(now) {
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+
+      ctx.fillStyle = OPT.bg;
+      ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+      if (analyser && freqData) {
+        analyser.getByteFrequencyData(freqData);
+        const bass = getBassEnergy();
+        detectBassBeat(now, bass);
+        drawVisualizer(dt);
+      }
+
+      if (running) requestAnimationFrame(render);
+    }
+
+    function drawVisualizer(dt) {
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+      const cx = w / 2, cy = h / 2;
+
+      const rBase = Math.min(w, h) * OPT.baseRadiusRatio;
+      const N = OPT.barsPerSemi;
+      if (barSmooth.length !== N) barSmooth = new Float32Array(N).fill(0);
+
+      // cập nhật domino
+      for (let i = dominoEvents.length - 1; i >= 0; i--) {
+        const e = dominoEvents[i];
+        e.progress += e.speed * dt;
+        if (e.progress > 1 + e.radius + 0.05) dominoEvents.splice(i, 1);
+      }
+
+      // glow nhẹ ở tâm
+      if (OPT.centerGlow) {
+        const g = ctx.createRadialGradient(cx, cy, rBase * 0.2, cx, cy, rBase * 1.6);
+        g.addColorStop(0, "#11233a");
+        g.addColorStop(1, "transparent");
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(cx, cy, rBase * 1.6, 0, Math.PI * 2); ctx.fill();
+      }
+
+      const angleStart = -Math.PI / 2;
+      const angleEnd   =  Math.PI / 2;
+      const angleSpan  = angleEnd - angleStart;
+
+      ctx.lineCap = "round";
+      ctx.lineWidth = OPT.lineWidth;
+
+      for (let side = 0; side < 2; side++) {
+        const mirror = (side === 1);
+
+        for (let i = 0; i < N; i++) {
+          const t = N === 1 ? 0.5 : i / (N - 1); // 0..1 trên nửa vòng
+          const angle = angleStart + t * angleSpan;
+
+          // năng lượng nền (đã thu nhỏ)
+          const energy = sampleLogFreqEnergy(t);
+          const curr = barSmooth[i];
+          const target = (energy / 255) * OPT.barMaxFromAudio * OPT.barAudioGain;
+          const attack = 0.8, release = 0.25;
+          const coeff = (target > curr)
+            ? (1 - Math.exp(-attack  * dt * 60))
+            : (1 - Math.exp(-release * dt * 60));
+          barSmooth[i] = curr + (target - curr) * coeff;
+
+          // hiệu ứng "núm tròn" — đối xứng quanh đầu sóng: lên rồi xuống
+          let dominoAdd = 0;
+          let nearHead = false;
+          for (const e of dominoEvents) {
+            const dist = Math.abs(t - e.progress);  // khoảng cách tới đầu sóng
+            if (dist <= e.radius) {
+              const bump = roundedBump(dist, e.radius); // 0..1, tròn, mượt
+              const biasHigherAtEnd = 0.45 + 0.65 * t;  // càng lên càng cao
+              dominoAdd += e.amp * bump * biasHigherAtEnd * OPT.dominoMaxHeight;
+              if (dist < e.radius * 0.35) nearHead = true; // để đổi màu
+            }
+          }
+
+          const barLen = barSmooth[i] + dominoAdd;
+
+          // vẽ bar theo góc a (mirror trái–phải)
+          const a = mirror ? (Math.PI - angle) : angle;
+          const nx = Math.cos(a), ny = Math.sin(a);
+          const x0 = cx + nx * rBase, y0 = cy + ny * rBase;
+          const x1 = cx + nx * (rBase + barLen), y1 = cy + ny * (rBase + barLen);
+
+          ctx.strokeStyle = nearHead ? OPT.barColorDomino : OPT.barColor;
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // log-map tần số → năng lượng (nền)
+    function sampleLogFreqEnergy(t) {
+      if (!freqData || !audioCtx) return 0;
+      const nyquist = audioCtx.sampleRate / 2;
+      const fMin = 50;
+      const fMax = Math.min(12000, nyquist);
+      const f = Math.exp(Math.log(fMin) * (1 - t) + Math.log(fMax) * t);
+      const idx = Math.max(0, Math.min(freqData.length - 1, Math.round(f / nyquist * freqData.length)));
+      let sum = 0, count = 0;
+      const radius = 2 + Math.floor(2 * t);
+      for (let k = -radius; k <= radius; k++) {
+        const j = idx + k;
+        if (j >= 0 && j < freqData.length) { sum += freqData[j]; count++; }
+      }
+      return count ? (sum / count) : 0;
+    }
+
+    // ============ UI ============ //
+    const btnStart = document.getElementById("btnStart");
+    const btnMic = document.getElementById("btnMic");
+    const filePick = document.getElementById("filePick");
+    const btnPause = document.getElementById("btnPause");
+
+    btnStart.addEventListener("click", async () => {
+      await ensureAudioContext();
+      setupAnalyser();
+
+      if (!audioEl) {
+        audioEl = new Audio();
+        audioEl.loop = true;
+        audioEl.crossOrigin = "anonymous";
+        audioEl.src = ""; // chờ người dùng chọn file
+      }
+      if (!usingMic) {
+        connectFromMediaElement(audioEl);
+        if (audioEl.src && audioEl.src.length > 0) {
+          audioEl.play().catch(()=>{});
+        }
+      }
+      running = true;
+      lastTime = performance.now();
+      requestAnimationFrame(render);
+    });
+
+    btnMic.addEventListener("click", async () => {
+      usingMic = true;
+      await ensureAudioContext();
+      setupAnalyser();
+      await connectFromMic();
+      running = true;
+      lastTime = performance.now();
+      requestAnimationFrame(render);
+    });
+
+    filePick.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      usingMic = false;
+      if (!audioEl) audioEl = new Audio();
+      audioEl.loop = true;
+      audioEl.crossOrigin = "anonymous";
+      audioEl.src = URL.createObjectURL(file);
+      await ensureAudioContext();
+      setupAnalyser();
+      connectFromMediaElement(audioEl);
+      audioEl.play().catch(()=>{});
+      running = true;
+      lastTime = performance.now();
+      requestAnimationFrame(render);
+    });
+
+    btnPause.addEventListener("click", () => {
+      if (!audioCtx) return;
+      if (audioCtx.state === "running") audioCtx.suspend();
+      else audioCtx.resume();
+    });
+  </script>
+</body>
+</html>
+```
+
+Tùy chỉnh nhanh:
+- Tăng “núm tròn” to/mượt hơn: chỉnh OPT.dominoRadius (rộng) và OPT.dominoMaxHeight (cao).
+- Thu nhỏ nền hơn nữa: giảm OPT.barAudioGain hoặc OPT.barMaxFromAudio.
+- Muốn “núm” nhọn hơn: thay roundedBump(...) bằng Gaussian (exp(-0.5*(dist/sigma)^2)).
+
+Bạn muốn mình thêm EQ để bass nổi bật hơn nữa hay đổi màu/gradient theo cường độ không? Mình chỉnh tiếp cho bạn nhé.

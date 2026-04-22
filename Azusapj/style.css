@@ -1,0 +1,1651 @@
+:root {
+  --foreground-color: #673ab7;
+  --background-color: #535353;
+  --thumb-color: #ffffff;
+  --thumb-hover-color: #b39ddb;
+  /* Library */
+  --lib-bg: #121016;
+  --lib-panel: #1e1a25;
+  --lib-border: #2a2633;
+  --lib-text: #e7e1f0;
+  --lib-muted: #6f2ac9;
+  --lib-accent: #6f1d81;
+  --lib-danger: #fc0202;
+  --alb-active: #342648;
+  --overlay: rgba(0, 0, 0, 0.5);
+  --rail-color:#e91e63;
+ --player-bgr:#2f1f36;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Nút hover (code cũ) */
+.btn-hover {
+  position: relative;
+  overflow: hidden;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: transform 0.2s ease;
+  transform: scale(1); /* mặc định */
+}
+
+/* Hover thì phóng to */
+.btn-hover:hover {
+  transform: scale(1.1);
+}
+
+/* Click thì thu nhỏ */
+.btn-hover:active {
+  transform: scale(0.9);
+}
+
+/* Hiệu ứng thanh sáng quét */
+.btn-hover::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  transform: skewX(-10deg);
+}
+
+/* Khi hover thì chạy hiệu ứng quét */
+.btn-hover:hover::before {
+  animation: scan 0.25s linear forwards;
+}
+
+@keyframes scan {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 120%;
+  }
+}
+
+/* Căn giữa nút */
+.center-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.center-btn:hover {
+  transform: translate(-50%, -50%) scale(1.1); /* phóng to vẫn giữ căn giữa */
+}
+
+.center-btn:active {
+  transform: translate(-50%, -50%) scale(0.9); /* thu nhỏ vẫn giữ căn giữa */
+}
+/* Player (code cũ) */
+#player-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100.7%;
+  height: 120px;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+#player-container:hover,
+#player-container.visible {
+  opacity: 1;
+}
+.player-background {
+  position: absolute;
+  inset: 0;
+  background-color: var(--player-bgr);
+  opacity: 0.5;
+}
+.player-content {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0 15px;
+  color: white;
+}
+.controls-left,
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.song-info {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--lib-muted)
+}
+.time-display {
+  font-size: 14px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  min-width: 120px;
+}
+.control-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  transition: transform 0.2s ease;
+}
+.control-button:hover {
+  transform: scale(1.2);
+}
+.control-button:active {
+  transform: scale(0.9);
+}
+.control-button img {
+  width: 100%;
+  height: 100%;
+}
+
+.control-button.play-btn {
+  width: 20px;
+  height: 20px;
+}
+.progress-bar-container {
+  position: absolute;
+  left: -15px;
+  right: 0;
+  bottom: -9px;
+  padding: 0 12px;
+}
+
+/* Range (code cũ) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+#progress-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--background-color) var(--value-percent, 0%),
+    var(--foreground-color) var(--value-percent, 0%)
+  );
+}
+#progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  background-color: var(--thumb-color);
+  border-radius: 50%;
+  border: none;
+  margin-top: -5px;
+  transition: background-color 0.2s ease-in-out;
+}
+#progress-slider::-webkit-slider-thumb:hover {
+  background-color: var(--thumb-hover-color);
+}
+#progress-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--background-color);
+}
+#progress-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--foreground-color);
+}
+#progress-slider::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: var(--thumb-color);
+  border: none;
+}
+/* ========== Library Overlay (bổ sung) ========== */
+#library-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+#library-overlay.open {
+  pointer-events: auto;
+}
+
+/* backdrop click để đóng overlay */
+#library-overlay .lib-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0, 0, 0);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+#library-overlay.open .lib-backdrop {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+/* shell chính */
+#library-overlay .lib-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  width: 100%;
+  background: transparent;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  pointer-events: none;
+}
+#library-overlay.open .lib-shell {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+#library-overlay .lib-btn,
+#library-overlay .album-item,
+#library-overlay .song-row {
+  position: relative;
+  overflow: hidden; /* giữ hiệu ứng quét gọn trong item */
+  transition: transform 0.3s ease, background-color 0.5s ease,
+    box-shadow 0.5s ease;
+  will-change: transform;
+  transform-origin: center; /* thu/phóng mượt */
+}
+
+/* Mặc định (có thể bị override bằng biến bên dưới) */
+#library-overlay .lib-btn:hover,
+#library-overlay .album-item:hover,
+#library-overlay .song-row:hover {
+  transform: scale(var(--fx-scale-hover, 1.1));
+}
+#library-overlay .lib-btn:active,
+#library-overlay .album-item:active,
+#library-overlay .song-row:active {
+  transform: scale(var(--fx-scale-active, 0.9));
+}
+
+/* Thanh sáng quét */
+#library-overlay .lib-btn::before,
+#library-overlay .album-item::before,
+#library-overlay .song-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  transform: skewX(-10deg);
+  pointer-events: none; /* không chặn click */
+}
+#library-overlay .lib-btn:hover::before,
+#library-overlay .album-item:hover::before,
+#library-overlay .song-row:hover::before {
+  animation: scan 0.4s linear forwards;
+}
+
+@keyframes scan {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 120%;
+  }
+}
+
+/* Tinh chỉnh mức scale theo loại (để không “đụng” các hàng khác) */
+#library-overlay .lib-btn {
+  --fx-scale-hover: 1.1;
+  --fx-scale-active: 0.9;
+}
+
+#library-overlay .album-item {
+  --fx-scale-hover: 1.06; /* nhẹ hơn để không tràn layout */
+  --fx-scale-active: 0.96;
+}
+
+#library-overlay .song-row {
+  --fx-scale-hover: 1.02; /* rất nhẹ để không làm lạ highlight */
+  --fx-scale-active: 0.98;
+  cursor: pointer; /* rõ ràng là có thể click */
+}
+
+/* Tùy chọn: giảm chuyển động khi người dùng bật “giảm chuyển động” */
+@media (prefers-reduced-motion: reduce) {
+  #library-overlay .lib-btn,
+  #library-overlay .album-item,
+  #library-overlay .song-row {
+    transition: background-color 0.5s ease, box-shadow 0.5s ease; /* bỏ transform */
+  }
+  #library-overlay .lib-btn:hover,
+  #library-overlay .album-item:hover,
+  #library-overlay .song-row:hover,
+  #library-overlay .lib-btn:active,
+  #library-overlay .album-item:active,
+  #library-overlay .song-row:active {
+    transform: none;
+  }
+  #library-overlay .lib-btn::before,
+  #library-overlay .album-item::before,
+  #library-overlay .song-row::before {
+    display: none;
+  }
+}
+/* NỀN panel: chỉ để tạo mờ, KHÔNG nhận sự kiện */
+.lib-panel-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--lib-bg);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  z-index: 0;
+  pointer-events: none; /* luôn none */
+}
+#library-overlay.open .lib-panel-bg {
+  opacity: 0.5; /* mờ 0.5 theo yêu cầu */
+}
+
+/* Nội dung nổi trên nền */
+#library-overlay .lib-shell > :not(.lib-panel-bg) {
+  position: relative;
+  z-index: 1;
+}
+
+.lib-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--lib-panel);
+  border-bottom: 1px solid var(--lib-border);
+}
+.lib-header input[type="text"] {
+  width: 420px;
+  max-width: 60vw;
+  padding: 10px 12px;
+  background: #191622;
+  border: 1px solid var(--lib-border);
+  color: var(--lib-text);
+  border-radius: 8px;
+}
+.lib-btn {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--lib-border);
+  background-color: var(--alb-active) ;
+  color: var(--lib-muted);
+  cursor: pointer;
+}
+.lib-btn:hover {
+  background:var(--alb-active);
+}
+.lib-btn.ghost {
+  background: transparent;
+}
+.lib-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color : var(--lib-muted);
+}
+.lib-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lib-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: calc(100vh - 60px);
+}
+.lib-albums {
+  background: var(--lib-panel);
+  border-right: 1px solid var(--lib-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.albums-header {
+  padding: 12px 14px;
+  font-weight: 600;
+  color: var(--lib-muted);
+  border-bottom: 1px solid var(--lib-border);
+}
+.album-list {
+  padding: 8px;
+  overflow: auto;
+  height: 100%;
+}
+.album-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--lib-text);
+}
+.album-item:hover {
+  background: --alb-active;
+}
+.album-item.active {
+ background-color:var(--alb-active);
+}
+.album-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--lib-border);
+  display: grid;
+  place-items: center;
+  color: var(--lib-muted);
+  font-size: 12px;
+}
+.album-title {
+  font-weight: 600;
+  color: var(--lib-muted);
+}
+.album-sub {
+  font-size: 12px;
+  color: var(--lib-muted);
+}
+
+.lib-songs {
+  overflow: auto;
+}
+.songs-header {
+  display: grid;
+  grid-template-columns: 64px 1fr 240px 240px;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--lib-border);
+  color: var(--lib-muted);
+}
+.song-list {
+  padding: 4px 8px 24px;
+}
+.song-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 240px 240px;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: default;
+  user-select: none;
+}
+.song-row:hover {
+  background: var(--alb-active);
+}
+.song-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--lib-border);
+  display: grid;
+  place-items: center;
+  color: var(--lib-text);
+  font-size: 12px;
+}
+.song-title {
+  font-weight: 600;
+}
+.song-artist,
+.song-album {
+  color: var(--lib-text);
+}
+.col {
+  font-size: 12px;
+  color: var(--lib-text);
+}
+
+.none-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--lib-text);
+  border: 1px dashed var/(--lib-border);
+  border-radius: 999px;
+  background: #1a1522;
+}
+
+/* Context menu */
+.ctx-shield {
+  position: fixed;
+  inset: 0;
+  background: transparent; /* không làm mờ */
+  z-index: 999; /* dưới menu (menu đang 2000) */
+  display: none; /* mặc định ẩn */
+  pointer-events: auto; /* khi hiện sẽ chặn toàn bộ pointer bên dưới */
+  cursor: default;
+}
+.ctx-shield.open {
+  display: block;
+}
+.ctx-menu,
+.ctx-submenu {
+  position: fixed;
+  z-index: 1000;
+  /* background: var(--lib-panel); */
+  background: #000000;
+  color: var(--lib-text);
+  border: 1px solid var(--lib-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  padding: 6px;
+  display: none;
+  min-width: 190px;
+}
+/* Bắt buộc: loại bỏ ẩn bằng display:none */
+.ctx-menu,
+.ctx-submenu {
+  position: fixed;
+  z-index: 2000;
+  min-width: 190px;
+
+  /* quan trọng: HIỆN LUÔN display để có thể animate */
+  display: block !important;
+
+  /* Ẩn bằng opacity/visibility + motion */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.98);
+  transform-origin: var(--origin-x, left) var(--origin-y, top);
+  transition: opacity 0.2s ease, transform 0.14s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0.2s; /* ẩn visibility sau khi fade-out */
+  will-change: opacity, transform;
+}
+
+/* Khi mở: bật click + fade/scale mượt */
+.ctx-menu.open,
+.ctx-submenu.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s; /* show visibility ngay */
+}
+
+/* (tùy chọn) tôn trọng giảm chuyển động */
+@media (prefers-reduced-motion: reduce) {
+  .ctx-menu,
+  .ctx-submenu {
+    transform: none;
+    transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+  }
+  .ctx-menu.open,
+  .ctx-submenu.open {
+    transform: none;
+    transition: opacity 0.12s ease, visibility 0s linear 0s;
+  }
+}
+.ctx-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ctx-item:hover {
+  background:#000;
+}
+.ctx-item.danger {
+  color: #ff0000;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: none;
+  place-items: center;
+  z-index: 1001;
+}
+.modal.open {
+  display: grid;
+}
+.modal-dialog {
+  width: 420px;
+  max-width: 92vw;
+  background: #000000;
+  border: 1px solid var(--lib-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.modal-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+.modal-body {
+  display: grid;
+  gap: 10px;
+}
+.modal-body label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--lib-text);
+}
+.modal-body input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--lib-border);
+  background: #191622;
+  color: var(--lib-text);
+}
+.hint {
+  font-size: 12px;
+  color: var(--lib-muted);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Scrollbar nhẹ */
+.album-list::-webkit-scrollbar,
+.lib-songs::-webkit-scrollbar,
+.song-list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.album-list::-webkit-scrollbar-thumb,
+.lib-songs::-webkit-scrollbar-thumb,
+.song-list::-webkit-scrollbar-thumb {
+  background: #3a304b;
+  border-radius: 8px;
+}
+/* Settings overlay container */
+#settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+}
+#settings-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.18s ease, visibility 0s linear 0s;
+}
+
+/* Backdrop toàn màn (mờ nhẹ) */
+.settings-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+#settings-overlay.open .settings-backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panel 30% trượt từ trái -> phải */
+.settings-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: min(30vw, 520px);
+  max-width: 520px;
+  overflow: hidden;
+  transform: translateX(-104%);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+#settings-overlay.open .settings-panel {
+  transform: translateX(0);
+}
+
+/* Nền panel mờ 0.5, nội dung rõ */
+.settings-panel-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--lib-bg);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+  pointer-events: none;
+}
+#settings-overlay.open .settings-panel-bg {
+  opacity: 0.5;
+}
+
+/* Rail icon bên trái (trong suốt) */
+.settings-rail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  z-index: 2;
+  background:transparent;
+}
+.settings-rail .rail-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--lib-text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+.rail-spacer {
+  flex: 1 1 auto; /* chiếm toàn bộ không gian trống */
+}
+
+.settings-rail .back-btn {
+  margin-top: auto; /* đảm bảo dính đáy */
+}
+/* hiệu ứng quét + scale (giống btn-hover) */
+.settings-rail .rail-btn:hover {
+  transform: scale(1.1);
+}
+.settings-rail .rail-btn:active {
+  transform: scale(0.9);
+}
+.settings-rail .rail-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  transform: skewX(-10deg);
+  pointer-events: none;
+}
+.settings-rail .rail-btn:hover::before {
+  animation: scan 0.25s linear forwards;
+}
+@keyframes scan {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 120%;
+  }
+}
+
+/* Thanh hồng chạy theo section */
+.rail-indicator {
+  position: absolute;
+  left: 4px;
+  width: 4px;
+  background: var(--rail-color);
+  top: 12px;
+  height: 44px;
+  transition: top 0.18s cubic-bezier(0.16, 1, 0.3, 1), height 0.18s ease;
+}
+.rail-icon {
+  display: flex;              /* dùng flexbox */
+  align-items: center;        /* căn giữa theo trục dọc */
+  justify-content: center;    /* căn giữa theo trục ngang */
+  width: 48px;                /* hoặc bất kỳ size button bạn muốn */
+  height: 48px;
+  background: transparent;    /* hoặc màu nền */
+  border: none;               /* bỏ viền mặc định */
+  padding: 0;                 /* tránh ảnh bị lệch */
+  cursor: pointer;
+}
+.settings-title {
+  font-size: 50px;
+  font-weight: bold;
+  color: var(--lib-muted);
+  margin-bottom: 50px;
+}
+/* Nội dung settings (phía bên phải rail) */
+.settings-content {
+  position: absolute;
+  left: 56px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  padding: 50px 14px 300px;
+  overflow: auto;
+  z-index: 1;
+  color: var(--lib-text);
+  -ms-overflow-style: none;
+}
+.settings-content::-webkit-scrollbar { 
+width: 0 !important;
+height: 0 !important;
+}
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.settings-section {
+  padding: 12px 8px 18px;
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0);
+  border: 1px solid var(--lib-border);
+  border-radius: 10px;
+}
+.settings-section h3 {
+  margin: 0 0 10px;
+  color: var(--lib-muted);
+}
+.setting-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #1a152200;
+  margin-bottom: 8px;
+}
+/* Overlay highlight chạy theo hover (ẩn mặc định) */
+/* Nút trong Theme trong suốt thật sự */
+
+.settings-content .setting-item,
+.settings-content .theme-actions .action-btn,
+.settings-content .theme-actions .lib-btn {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  position: relative;
+  z-index: 2; /* nằm trên highlight */
+}
+
+/* Overlay highlight (bình thường ẩn) */
+
+/* Overlay highlight – ẩn cho tới khi lần đầu hover */
+.settings-row-highlight {
+  position: absolute;
+  z-index: 1;               /* sau item */
+  left: 0; top: 0;
+  width: 0; height: 0;
+  border-radius: 0px;
+  background: transparent;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    top .18s cubic-bezier(.16,1,.3,1),
+    left .18s cubic-bezier(.16,1,.3,1),
+    width .18s ease, height .18s ease,
+    opacity .12s ease, background .12s ease, border-color .12s ease;
+  overflow: visible;
+}
+
+/* Khi đã kích hoạt: luôn hiện thanh đen (dù không hover) */
+.settings-row-highlight.active {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.997);
+  border-color: rgb(0, 0, 0);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.06),
+    0 6px 24px rgb(0, 0, 0);
+}
+
+/* Vệt trắng dọc bên trái – chỉ bật khi đang hover */
+.settings-row-highlight::before {
+  content: "";
+  position: absolute;
+  left: 0px; top: 0px; bottom: 0px;
+  width: 8px; border-radius: 0;
+  background: linear-gradient(
+    to right,
+    rgba(255,255,255,.95) 0%,
+    rgba(255,255,255,.55) 45%,
+    rgba(255,255,255,0) 100%
+  );
+  filter:
+    drop-shadow(0 0 6px  rgba(255,255,255,.45))
+    drop-shadow(0 0 12px rgba(255,255,255,.30));
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.settings-row-highlight.hovered::before {
+  opacity: 1;
+  transform: translateX(0);
+}
+/* Nút Back dùng style lib-btn sẵn có + hiệu ứng */
+#settings-back-btn {
+  position: relative;
+  overflow: hidden;
+}
+#settings-back-btn:hover {
+  transform: scale(1.1);
+}
+#settings-back-btn:active {
+  transform: scale(0.9);
+}
+#settings-back-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  transform: skewX(-10deg);
+  pointer-events: none;
+}
+#settings-back-btn:hover::before {
+  animation: scan 0.25s linear forwards;
+}
+.theme-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Toggle switch */
+.switch {
+  position: relative;
+  width: 46px;
+  height: 24px;
+  cursor: pointer;
+}
+.switch input { display: none; }
+.switch .track {
+  position: absolute; inset: 0;
+  background: var(--track-muted);
+  border-radius: 999px;
+  transition: background .18s ease;
+}
+.switch .thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .18s ease;
+}
+.switch input:checked + .track { background:var(--accent) }
+.switch input:checked ~ .thumb { transform: translateX(22px); }
+.theme-toggle .label { color: var(--lib-text); font-size: 14px; }
+
+/* Khung bị skew để tạo mép xiên */
+/* Tùy chỉnh nhanh */
+.skew-wrap{
+  position: relative;
+  overflow: visible;
+
+  --bw: 1.5px;                 /* độ dày viền thật (đặt khớp border-width) */
+  --glow-w: var(--bw);         /* độ dày vệt sáng (thường = viền) */
+  --pad: 0px;                  /* đẩy vệt vào trong 1 chút nếu cần */
+  --radius: 8px;               /* bo góc khung */
+  --speed: 1.5s;               /* tốc độ chạy quanh */
+
+  --bcol: var(--lib-border);   /* màu cơ sở lấy từ theme */
+  --glow: color-mix(in srgb, var(--bcol) 55%, #ffffff 45%); /* sáng hơn bcol */
+  border-radius: var(--radius);
+}
+.skew-wrap { transform: skewX(-15deg); transform-origin: left center; }
+/* Khai báo custom property để animate góc conic-gradient (Chromium/Safari) */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Viền sáng chạy quanh bằng conic-gradient + mask để chỉ hiện phần “viền” */
+.skew-wrap::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+
+  /* Conic gradient có 1 “tia sáng” nhỏ, còn lại trong suốt */
+  background:
+    conic-gradient(from var(--angle),
+      transparent 0deg,
+      transparent 330deg,
+      color-mix(in srgb, var(--glow) 80%, transparent) 345deg,
+      var(--glow) 354deg,
+      transparent 360deg
+    );
+
+  /* Chỉ hiện phần viền: dùng mask content-box (viền dày = --glow-w) */
+  padding: var(--glow-w);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;   /* Safari/Chromium */
+          mask-composite: exclude;
+
+  /* Glow mềm quanh viền */
+  filter:
+    drop-shadow(0 0 6px  var(--glow))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--glow) 65%, transparent))
+    drop-shadow(0 0 28px color-mix(in srgb, var(--glow) 35%, transparent));
+
+  /* Chạy quanh: tăng góc 0→360deg */
+  animation: spin-border var(--speed) linear infinite;
+}
+
+/* Chạy mượt góc (không dựng đứng) vì gradient quay theo tâm box;
+   khung đang skew nên vệt vẫn bám mép hình bình hành */
+@keyframes spin-border{
+  to { --angle: 1turn; }
+}
+
+/* Tuỳ chọn: chỉ sáng khi hover/focus để đỡ rối mắt */
+.skew-wrap::before{ opacity: .95; transition: opacity .16s ease; }
+.skew-wrap:hover::before,
+.skew-wrap:focus-within::before{ opacity: 1; }
+
+@media (prefers-reduced-motion: reduce){
+  .skew-wrap::before{ animation: none; opacity: 0; }
+}
+
+/* Input “khử skew” để chữ đứng thẳng */
+.profile-input {
+  transform: skew(15deg);           /* khử skew của .skew-wrap */
+  display: block;
+  border: 0;
+  background: transparent;
+  color: var(--lib-text);
+  font-size: 14px;
+  padding: 10px 12px;
+  width: 95%;
+  outline: none;
+}
+
+/* Placeholder không cần transform riêng, kế thừa là đủ */
+.profile-input::placeholder { color: var(--lib-text); opacity: .7; }
+
+#sec-theme {
+  --theme-row-h:37.6px;    /* chiều cao mỗi nút trong Theme (đổi 52/60…) */
+  --theme-gap: 12px;      /* khoảng cách giữa các nút */
+  --theme-font: 15px;     /* cỡ chữ trong nút */
+}
+
+/* Nhóm 3 nút trong Theme lớn hơn và full bề ngang vùng content */
+#sec-theme .theme-actions{
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--theme-gap);
+  margin: 0 0 var(--theme-gap) 0;
+  margin-inline: -8px;      /* lấy đúng padding 8px của .settings-section */
+  padding-inline: 8px;
+}
+
+/* Nút Theme – cao & rộng như yêu cầu, trong suốt để highlight đen phía sau thấy được */
+#sec-theme .theme-actions .lib-btn,
+#sec-theme .theme-actions .action-btn{
+  width: 100%;                         /* full bề ngang phần content của section Theme */
+  min-height: var(--theme-row-h);      /* tăng chiều cao nút */
+  padding: 0 14px;                     /* padding ngang của nút */
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+
+  /* trong suốt hoàn toàn (để lớp highlight đen phía sau hiện lên) */
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+
+  color: var(--lib-text);
+  font-size: var(--theme-font);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Toggle không bị ảnh hưởng (không cần đổi gì) */
+/* nếu không đổi HTML, vẫn nên set kích thước row cho .theme-toggle */
+#sec-theme .theme-toggle{
+  min-height: var(--theme-row-h);
+  position:relative;
+  z-index: 2;
+}
+
+/* L2D video nền (nằm dưới visualizer) */
+#l2d-video {
+  position: fixed !important;   /* đứng trên viewport */
+  top: 0; left: 0;              /* phủ full màn */
+  width: 100vw;
+  height: 100dvh;               /* viewport thực tế (iOS/Android mới) */
+  height: 100svh;               /* fallback */
+  height: 100vh;                /* fallback nữa */
+  max-width: none !important;
+  max-height: none !important;
+  display: block;
+  object-fit: cover;            /* phủ kín, crop phần thừa */
+  z-index: 1;                   /* dưới visualizer/canvas của bạn */
+  pointer-events: none;         /* không chặn click */
+  opacity: 0;                   /* giữ hiệu ứng bạn đang dùng */
+  transition: opacity .18s ease;
+}
+#l2d-video.on { opacity: 1; }
+/* Tôn trọng reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .settings-panel {
+    transition: none;
+  }
+  .settings-backdrop,
+  .settings-panel-bg,
+  .rail-indicator {
+    transition: none;
+  }
+}
+body {
+  background: #000;
+}
+
+.player_card {
+  margin: 20px auto;
+  position: absolute;
+  width: 800px;
+  height: 640px;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  transition: left 0.5s cubic-bezier(0.16, 1, 0.3, 1); /* thêm transition để trượt mượt */
+  z-index: 10;
+}
+/* Khi mở: dịch sang trái 30% */
+.player_card.open {
+  left: 35%;
+  pointer-events: none;
+}
+
+#visualizer {
+  display: block;
+}
+
+.center-panel {
+  position: absolute;
+  width: 670px;
+  height: 400px;
+  background: #ffffff00;
+  z-index: 9;
+  top: 52.9%;
+  left: 44%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+  overflow: visible;
+  /* Căn giữa mọi nội dung bên trong */
+  display: grid;
+  place-items: center; /* = align-items:center + justify-items:center */
+}
+.center-panel.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Khối bọc các nút: nằm CHÍNH GIỮA center-panel */
+.center-panel .btn-group {
+  /* Kích thước khối nút (bạn có thể chỉnh %) */
+  width: 50%;
+  height:70%;
+  position:absolute;
+  right:0;
+  /* Chia thành 3 hàng bằng nhau */
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* Nút chiếm full mỗi hàng, chữ bên phải */
+.action-btn {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;         /* giữa theo chiều dọc của hàng */
+  justify-content: center;   /* chữ sang bên phải */
+  text-align: right;
+  padding: 0 22px;
+
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(
+  135deg,
+  var(--lib-panel) 0%,
+  var(--lib-panel) 55%,
+  var(--lib-panel) 100%
+);
+
+  color: #f3ecff;
+  border: none;
+  font-weight: 700;
+  /* font-size: clamp(18px, 2.2vw, 28px); */
+  font-size: 32px;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+.action-btn:hover { transform: scale(1.02); filter: brightness(1.05); }
+.action-btn:active { transform: scale(0.98); }
+
+/* Hiệu ứng quét */
+.action-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  transform: skewX(-10deg);
+  pointer-events: none;
+}
+.action-btn:hover::before { animation: scan 0.25s linear forwards; }
+
+@keyframes scan {
+  0%   { left: -50%; }
+  100% { left: 120%; }
+}
+/* Tùy biến riêng cho Theme */
+/* 3 biến opacity dùng chung (mặc định 50%) */
+:root{
+  --op-lib-backdrop: .5;
+  --op-player-bg: .5;
+  --op-settings-panel-bg: .5;
+
+  --setting-row-h: 37.6px;   /* nếu bạn muốn đồng bộ chiều cao row */
+}
+
+/* Override các rule opacity hiện tại bằng biến (đặt cuối file để thắng) */
+#library-overlay.open .lib-backdrop { opacity: var(--op-lib-backdrop, .5); pointer-events: auto; }
+.player-background { opacity: var(--op-player-bg, .5); }
+#settings-overlay.open .settings-panel-bg { opacity: var(--op-settings-panel-bg, .5); }
+
+/* Hàng General: label trái + slider phải */
+.setting-item .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--setting-row-h);
+}
+.setting-item .row-label {
+  min-width: 150px;          /* chiều rộng nhãn (tùy chỉnh) */
+  color: var(--lib-text);
+}
+.setting-item .row-ctrl {
+  flex: 1;
+}
+
+/* Slider + bubble */
+.range-wrap { position: relative; width: 100%; }
+.range-wrap input[type="range"]{
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; border-radius: 3px;
+  background: rgba(255,255,255,.15);
+  outline: none; cursor: pointer;
+}
+.range-wrap input[type="range"]::-webkit-slider-runnable-track{
+  height: 6px; border-radius: 3px; background: rgba(255,255,255,.15);
+}
+.range-wrap input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; border: 0;
+  margin-top: -6px; box-shadow: 0 0 0 3px rgba(255,255,255,.18), 0 2px 8px rgba(0,0,0,.3);
+}
+.range-wrap input[type="range"]::-moz-range-track{ height:6px; border-radius:3px; background: rgba(255,255,255,.15); }
+.range-wrap input[type="range"]::-moz-range-thumb{
+  width:18px; height:18px; border-radius:50%; background:#fff; border:0; box-shadow: 0 0 0 3px rgba(255,255,255,.18), 0 2px 8px rgba(0,0,0,.3);
+}
+
+.range-wrap.show .value-bubble{ opacity:1; transform: translateX(-50%) translateY(-2px); }
+:root{
+  --accent: #ff7b95;        /* hồng đậm (viền thumb + bên trái track) */
+  --track-muted: #f2778f; /* bên phải track */
+  --track-h: 2px;
+  --thumb-size: 16px;
+
+  --panel-bg: #2a1520;
+  --panel-border: #553040;
+  --text: #f4e9ec;
+  --text-dim: #c9aeb6;
+}
+
+.setting-item{ margin: 12px 0; }
+.row{ display:flex; align-items:center; gap:12px; }
+.row-label{ width: 180px; color: var(--text-dim); }
+.row-ctrl{ flex: 1; }
+
+/* Buttons */
+.btn{ padding:8px 12px; border-radius:8px; border:1px solid var(--panel-border); background:#3a1d29; color:var(--text); cursor:pointer; }
+.btn:hover{ background:#44202e; }
+.btn-ghost{ padding:6px 10px; border:1px solid transparent; background:transparent; color:var(--text); cursor:pointer; }
+.select{ padding:6px 8px; border-radius:8px; border:1px solid var(--panel-border); background:#3a1d29; color:var(--text); }
+.spacer{ flex:1; }
+
+/* Slider wrap */
+.range-wrap{ position:relative; height:36px; }
+
+/* Track vẽ bằng ::before + mask để đục lỗ dưới thumb (không xuyên) */
+.range-wrap::before{
+  content:"";
+  position:absolute; left:0; right:0; top:50%;
+  height: var(--track-h);
+  transform: translateY(-50%);
+  background:
+    linear-gradient(to right,
+      var(--accent) 0,
+      var(--accent) calc(var(--pos) - var(--hole)),
+      transparent calc(var(--pos) - var(--hole)),
+      transparent 100%),
+    linear-gradient(to right,
+      transparent 0,
+      transparent calc(var(--pos) + var(--hole)),
+      var(--track-muted) calc(var(--pos) + var(--hole)),
+      var(--track-muted) 100%);
+  -webkit-mask: radial-gradient(circle at var(--pos) 50%, transparent var(--hole), #000 var(--hole));
+          mask: radial-gradient(circle at var(--pos) 50%, transparent var(--hole), #000 var(--hole));
+  pointer-events:none; z-index:0;
+}
+
+/* Range input */
+.range-wrap input[type="range"]{
+  appearance: none; -webkit-appearance: none;
+  width:100%; height:36px; background:transparent; position:relative; z-index:1; cursor:pointer;
+  outline:none; -webkit-tap-highlight-color: transparent;
+}
+.range-wrap input[type="range"]:focus,
+.range-wrap input[type="range"]:focus-visible{ outline:none; }
+
+/* Ẩn track mặc định */
+.range-wrap input[type="range"]::-webkit-slider-runnable-track{ height:var(--track-h); background:transparent; }
+.range-wrap input[type="range"]::-moz-range-track{ height:var(--track-h); background:transparent; }
+.range-wrap input[type="range"]::-moz-range-progress{ height:var(--track-h); background:transparent; }
+
+/* Thumb rỗng viền hồng */
+.range-wrap input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:var(--thumb-size); height:var(--thumb-size); border-radius:50%;
+  border:2px solid var(--accent); background:transparent;
+  margin-top: calc((var(--track-h) - var(--thumb-size)) / 2);
+  box-shadow:none !important;
+}
+.range-wrap input[type="range"]::-moz-range-thumb{
+  width:var(--thumb-size); height:var(--thumb-size); border-radius:50%;
+  border:2px solid var(--accent); background:transparent; box-shadow:none !important;
+}
+
+.value-bubble{
+  position: absolute; bottom: calc(100% + 0px);
+  left: 0; transform: translateX(-50%);
+  background: rgba(0,0,0,.78); color:#fff;
+  font-size: 12px; padding: 2px 6px; border-radius: 6px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .12s ease, transform .12s ease;
+}
+.range-wrap.show .value-bubble{ opacity:1; transform: translateX(-50%) translateY(-2px); }
+
+:root{
+  --bg-blur: 0px;   /* độ mờ */
+  --bg-img: #000;   /* url(...) cho lớp ảnh nền (fallback/no-bdf) */
+}
+
+/* Lớp ảnh nền (chỉ dùng làm nền tĩnh + fallback, không blur ở chế độ backdrop) */
+#theme-bg-layer{
+  position: fixed;
+  inset: 0;
+  z-index: 0;                     /* dưới L2D và UI */
+  pointer-events: none;
+  background: #000 var(--bg-img) center/cover no-repeat fixed;
+  transform: scale(1.05);         /* tránh lộ viền nếu dùng blur fallback */
+}
+
+/* Lớp blur đứng trên background/L2D, dưới UI */
+#bg-blur-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 2;                     /* L2D z-index:1, player z-index:20 → overlay blur nằm giữa */
+  pointer-events: none;
+  background: rgba(0,0,0,0.001);  /* cần 1 chút alpha để backdrop-filter hoạt động */
+  backdrop-filter: blur(var(--bg-blur));
+  -webkit-backdrop-filter: blur(var(--bg-blur));
+}
+
+/* Fallback khi trình duyệt không hỗ trợ backdrop-filter */
+:root.no-bdf #bg-blur-overlay{ display: none; }
+:root.no-bdf #theme-bg-layer{ filter: blur(var(--bg-blur)); } /* blur ảnh nền tĩnh */
+:root.no-bdf #l2d-video{ filter: blur(var(--bg-blur)); }      /* blur cả L2D */
+#sec-color input[type="color"]{
+  appearance: none;
+  width: 38px; height: 26px; padding:0; border-radius: 6px;
+  background: transparent; border: 1px solid var(--lib-border);
+  cursor: pointer;
+}
+#sec-color input[type="color"]::-webkit-color-swatch-wrapper{ padding:0; }
+#sec-color input[type="color"]::-webkit-color-swatch{ border:none; border-radius: 6px; }
+
+#sec-color #panels-group .panel-tune{
+  display: grid; grid-template-rows: auto auto auto; gap: 10px; align-items: start;
+}
+#sec-color #panels-group .mini-label{
+  color: var(--lib-muted); font-size: 12px; margin-bottom: 2px;
+}
+#sec-color #spread-wrap{ width: 100%; height: 36px; }
+#sec-color #spread-wrap input[type="range"]{ width: 100% !important; }
+
+/* Preview chips */
+#sec-color #panels-group .panel-preview{ display:inline-flex; gap:8px; align-items:center; }
+#sec-color #panels-group .panel-preview i{
+  width: 24px; height: 18px; border-radius: 5px;
+  display:inline-block; background:#2a2a2a; border:1px solid var(--lib-border);
+}
+#viz-mode-select {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--lib-border);
+  background: #191622;
+  color: var(--lib-text);
+  outline: none;
+  cursor: pointer;
+}
+#viz-mode-select:focus { box-shadow: 0 0 0 2px rgba(255,255,255,0.06); }
+/* Nút nguy hiểm trong modal */
+.lib-btn.danger {
+  background: #000000;
+  border-color: var(--lib-border);
+  color:var(--lib-muted);
+}
+/* Splash overlay */
+
+
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  background: #000;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  overflow: hidden;
+  transition:
+    opacity 0.8s ease,
+    visibility 0s linear 0.8s; /* delay ẩn visibility sau khi fade */
+  --bar-h: 4px;
+  --bar-w: min(86vw, 960px);
+}
+
+/* Khi ẩn */
+#splash.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Chữ cũng mờ dần */
+#splash.hide .splash-text {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1.05);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+
+#splash.hide .splash-text{
+  opacity: 0;
+  transform: translate(-50%,-50%) scale(1.05);
+}
+.splash-cta{
+  position:absolute; bottom: 9vh; left:50%; transform:translateX(-50%);
+  color:#cfcfcf; font: 700 14px/1.2 system-ui, Arial;
+  letter-spacing: 1.6px; text-transform: uppercase;
+  animation: splashPulse 1.6s ease-in-out infinite;
+  user-select:none; pointer-events:none;
+}
+@keyframes splashPulse{ 0%{opacity:.35} 50%{opacity:1} 100%{opacity:.35} }
+
+/* Bars */
+#splash .bar{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  height: var(--bar-h); width: 0;
+  background:#fff; border-radius: 3px;
+  box-shadow: 0 0 12px rgba(255,255,255,.9), 0 0 28px rgba(255,255,255,.55);
+  opacity:0;
+}
+#splash .bar-center.run{
+  opacity:1; animation: barGrow .45s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes barGrow{
+  from { width: 0; opacity:1; }
+  to   { width: var(--bar-w); opacity:1; }
+}
+#splash .bar-top, #splash .bar-bottom{
+  width: var(--bar-w); opacity:0;
+}
+#splash .bar-top.split{
+  opacity:1; animation: barUp 1s cubic-bezier(.16,1,.3,1) forwards;
+}
+#splash .bar-bottom.split{
+  opacity:1; animation: barDown 1s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes barUp{
+  from { transform: translate(-50%,-50%); }
+  to   { transform: translate(-50%, calc(-50% - 26vh)); opacity:.0; }
+}
+@keyframes barDown{
+  from { transform: translate(-50%,-50%); }
+  to   { transform: translate(-50%, calc(-50% + 26vh)); opacity:.0; }
+}
+
+/* Text */
+.splash-text{
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%) scale(.85);
+  color:#fff; text-align:center; opacity:0;
+  pointer-events:none;
+  transition: opacity .35s ease, transform .35s ease; /* thêm */
+}
+
+.splash-title{
+  font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+  font-size: clamp(28px, 5vw, 52px);
+}
+.splash-name{
+  margin-top: 8px;
+  font-weight: 700;
+  color: white;
+  font-size: clamp(16px, 3.2vw, 28px);
+}
+.splash-text.on{ animation: textIn .6s cubic-bezier(.16,1,.3,1) forwards; }
+@keyframes textIn{
+  0%   { opacity:0; transform:translate(-50%,-50%) scale(.84) }
+  60%  { opacity:1; transform:translate(-50%,-50%) scale(1) }
+  100% { opacity:1; transform:translate(-50%,-50%) scale(1) }
+}
+.splash-text.out{ animation: textOut 1s ease forwards; }
+@keyframes textOut{
+  to { opacity:0; transform:translate(-50%,-50%) scale(1.05) }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce){
+  #splash .bar, .splash-text{ animation: none !important; }
+}/* Hide scrollbars in Library (vẫn cuộn bình thường) */
+#library-overlay .album-list,
+#library-overlay .lib-songs,
+#library-overlay .song-list {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE/Edge cũ */
+  -ms-overflow-style: none;
+}
+
+/* WebKit (Chrome/Safari/Edge Chromium) */
+#library-overlay .album-list::-webkit-scrollbar,
+#library-overlay .lib-songs::-webkit-scrollbar,
+#library-overlay .song-list::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
