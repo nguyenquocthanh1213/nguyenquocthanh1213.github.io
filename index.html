@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Azusapj</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Player -->
+    <div id="player-container">
+      <!-- thêm class="visible" nếu muốn luôn hiện -->
+      <div class="player-background"></div>
+
+      <div class="player-content">
+        <div class="controls-left">
+          <button id="prev-btn" class="control-button">
+            <img src="img/ptrack.png" alt="Previous" />
+          </button>
+          <button id="play-pause-btn" class="control-button play-btn">
+            <img src="img/play.png" alt="Play/Pause" />
+          </button>
+          <button id="next-btn" class="control-button">
+            <img src="img/ntrack.png" alt="Next" />
+          </button>
+          <span id="time-display" class="time-display">00:00 / 00:00</span>
+        </div>
+
+        <div class="song-info">
+          <span id="song-title">Chưa có bài hát nào được chọn</span>
+        </div>
+
+        <div class="controls-right">
+          <button id="repeat-btn" class="control-button">
+            <img src="img/repeat.png" alt="Repeat" />
+          </button>
+          <button id="playlist-btn" class="control-button">
+            <img src="img/listicon.png" alt="Playlist" />
+          </button>
+          <button id="settings-btn" class="control-button">
+            <img src="img/setting.png" alt="Settings" />
+          </button>
+        </div>
+
+        <div class="progress-bar-container">
+          <input
+            type="range"
+            id="progress-slider"
+            min="0"
+            max="0"
+            step="any"
+            value="0"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio + input cũ -->
+    <audio id="audio-player" preload="metadata"></audio>
+    <input
+      type="file"
+      id="song-selector"
+      accept="audio/*"
+      hidden
+      title="Chọn file nhạc"
+    />
+    <div class="player_card">
+      <canvas id="visualizer"></canvas>
+    </div>
+    <div id="center-panel" class="center-panel">
+      <div class="btn-group">
+        <button id="play-pause-btn" class="action-btn">Play</button>
+        <button id="playlist-btn" class="action-btn">Select Song</button>
+        <button id="settings-btn" class="action-btn">Settings</button>
+      </div>
+    </div>
+    <!-- Library overlay -->
+    <div id="library-overlay" aria-hidden="true">
+      <div class="lib-backdrop" id="lib-backdrop"></div>
+
+      <div class="lib-shell">
+        <div class="lib-panel-bg" aria-hidden="true"></div>
+
+        <div class="lib-header">
+          <div class="lib-left">
+            <input
+              id="library-search-input"
+              type="text"
+              placeholder="Search"
+              autocomplete="off"
+            />
+          </div>
+          <div class="lib-right">
+            <button id="library-add-btn" class="lib-btn">Add song</button>
+            <button id="library-new-album-btn" class="lib-btn">
+              New album
+            </button>
+            <button id="library-close-btn" class="lib-btn ghost">Close</button>
+          </div>
+        </div>
+
+        <div class="lib-grid">
+          <aside class="lib-albums">
+            <div class="albums-header"><span>Albums</span></div>
+            <div id="album-list" class="album-list"></div>
+          </aside>
+
+          <main class="lib-songs">
+            <div class="songs-header">
+              <div class="col cover">Imgae</div>
+              <div class="col title">Name</div>
+              <div class="col artist">Artist</div>
+              <div class="col album">Album</div>
+            </div>
+            <div id="song-list" class="song-list"></div>
+          </main>
+        </div>
+      </div>
+
+      <!-- Context menus + submenu nằm trong Library -->
+      <div id="library-context-menu" class="ctx-menu">
+        <div class="ctx-item" data-action="move">Move to playlist</div>
+        <div class="ctx-item" data-action="remove-from-playlist" hidden>
+          Remove from playlist
+        </div>
+        <div class="ctx-item danger" data-action="delete">Delete song</div>
+      </div>
+
+      <div id="album-context-menu" class="ctx-menu">
+        <div class="ctx-item danger" data-action="delete-album">
+          Delete album
+        </div>
+      </div>
+
+      <div id="library-album-picker" class="ctx-submenu"></div>
+
+      <!-- Modal tạo album -->
+      <div id="album-modal" class="modal" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-title">Tạo album (playlist)</div>
+          <div class="modal-body">
+            <label>
+              Artist
+              <input id="modal-artist" type="text" placeholder="Artist..." />
+            </label>
+            <label>
+              Album
+              <input id="modal-album" type="text" placeholder="Album..." />
+            </label>
+            <!-- <div class="hint">
+              Album sẽ mang tên Artist. Nếu có bài hát khớp artist+album, sẽ tự
+              động thêm vào album này. Ảnh đại diện lấy 1 ảnh bất kỳ từ bài
+              trong album (không có thì ghi none).
+            </div> -->
+          </div>
+          <div class="modal-actions">
+            <button id="album-cancel" class="lib-btn ghost">Cancle</button>
+            <button id="album-create" class="lib-btn">Create</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Confirm delete song -->
+    <div
+      id="confirm-modal"
+      class="modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-title">Delete this song?</div>
+        <div class="modal-actions">
+          <button id="confirm-cancel" class="lib-btn ghost">
+            Don’t delete
+          </button>
+          <button id="confirm-ok" class="lib-btn danger">Delete</button>
+        </div>
+      </div>
+    </div>
+    <!-- Settings overlay (tách riêng, KHÔNG đặt trong Library) -->
+    <div id="settings-overlay" aria-hidden="true">
+      <div id="settings-backdrop" class="settings-backdrop"></div>
+
+      <aside id="settings-panel" class="settings-panel">
+        <div class="settings-panel-bg" aria-hidden="true"></div>
+
+        <nav class="settings-rail" id="settings-rail">
+          <!-- các icon -->
+          <button class="rail-btn" data-target="general" title="General">
+            <img class="rail-icon" ... src="img/glass.png" alt="General" />
+          </button>
+          <button class="rail-btn" data-target="audio" title="Audio">
+            <img class="rail-icon" src="img/volume.png" alt="General" ... />
+          </button>
+          <button class="rail-btn" data-target="theme" title="Theme">
+            <img class="rail-icon" src="img/theme.png" alt="General" ... />
+          </button>
+          <button class="rail-btn" data-target="color" title="Color">
+            <img class="rail-icon" src="img/color.png" alt="General" ... />
+          </button>
+          <button class="rail-btn" data-target="profile" title="Profile">
+            <img class="rail-icon" src="img/profile.png" alt="General" ... />
+          </button>
+          <button class="rail-btn" data-target="about" title="About">
+            <img class="rail-icon" src="img/about.png" alt="General" ... />
+          </button>
+          <div class="rail-indicator" id="rail-indicator"></div>
+
+          <!-- spacer đẩy Back xuống đáy -->
+          <div class="rail-spacer"></div>
+          <button
+            id="settings-back-rail"
+            class="rail-btn back-btn"
+            title="Back"
+          >
+            ⟵
+          </button>
+        </nav>
+        <div class="settings-content" id="settings-content">
+          <section class="setting-section" id="settings-content">
+            <h2 class="settings-title">Settings</h2>
+          </section>
+          <section
+            class="settings-section"
+            id="sec-general"
+            data-section="general"
+            data-bar-scope
+          >
+            <h3>Opacity Setting</h3>
+
+            <!-- Library overlay backdrop -->
+            <!-- Library backdrop -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Library backdrop:</div>
+                <div class="row-ctrl">
+                  <div class="range-wrap">
+                    <input
+                      id="op-lib"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value="50"
+                    />
+                    <div class="value-bubble" id="op-lib-bubble">50</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Player background -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Player background:</div>
+                <div class="row-ctrl">
+                  <div class="range-wrap">
+                    <input
+                      id="op-player"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value="50"
+                    />
+                    <div class="value-bubble" id="op-player-bubble">50</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Settings panel background -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Settings panel:</div>
+                <div class="row-ctrl">
+                  <div class="range-wrap">
+                    <input
+                      id="op-settings"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value="50"
+                    />
+                    <div class="value-bubble" id="op-settings-bubble">50</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="settings-section" id="sec-audio" data-section="audio">
+            <h3>Audio</h3>
+            <!-- Volume -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Volume</div>
+                <div class="row-ctrl">
+                  <div class="range-wrap">
+                    <!-- 0..1 để khớp audio.volume -->
+                    <input
+                      id="vol-settings"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value="1"
+                      data-format="percent01"
+                    />
+                    <div class="value-bubble">100%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="settings-section" id="sec-theme" data-section="theme">
+            <h3>Theme</h3>
+
+            <div class="theme-actions">
+              <button id="theme-bg-btn" class="lib-btn">
+                Set background image
+              </button>
+              <button id="theme-circle-btn" class="lib-btn">
+                Set circle image
+              </button>
+              <button id="theme-l2d-btn" class="lib-btn">
+                Choose L2D video
+              </button>
+            </div>
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Background blur</div>
+                <div class="row-ctrl">
+                  <div class="range-wrap">
+                    <input
+                      id="bg-blur"
+                      type="range"
+                      min="0"
+                      max="30"
+                      step="1"
+                      value="0"
+                    />
+                    <div class="value-bubble">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-toggle">
+              <label class="switch">
+                <input type="checkbox" id="theme-l2d-toggle" />
+                <span class="track"></span>
+                <span class="thumb"></span>
+              </label>
+              <span class="label">Enable L2D</span>
+            </div>
+          </section>
+          <section class="settings-section" id="sec-color" data-section="color">
+            <h3>Color</h3>
+
+            <!-- Player background -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Player background</div>
+                <div class="row-ctrl">
+                  <input id="col-player-bgr" type="color" value="#2f1f36" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Heading text (lib-muted) -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Heading text</div>
+                <div class="row-ctrl">
+                  <input id="col-heading" type="color" value="#6f2ac9" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Text (lib-text) -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Text</div>
+                <div class="row-ctrl">
+                  <input id="col-text" type="color" value="#e7e1f0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Panels group (rail-color, lib-bg, lib-panel, lib-border; alb-active nhạt hơn panel) -->
+            <div class="setting-item" id="panels-group">
+              <div class="row">
+                <div class="row-label">Panels group</div>
+                <div class="row-ctrl">
+                  <div class="panel-tune">
+                    <!-- Khu Color -->
+                    <div class="panel-color">
+                      <input
+                        id="col-panels-base"
+                        type="color"
+                        value="#1e1a25"
+                      />
+                    </div>
+
+                    <!-- Khu Spread (slider dài giống Library backdrop) -->
+                    <div class="panel-spread">
+                      <div class="range-wrap" id="spread-wrap">
+                        <input
+                          id="sl-panels-spread"
+                          type="range"
+                          min="6"
+                          max="26"
+                          step="1"
+                          value="12"
+                        />
+                        <div class="value-bubble">12</div>
+                      </div>
+                    </div>
+
+                    <!-- Preview: rail/bg/panel/border + alb-active -->
+                    <div class="panel-preview" id="panels-preview">
+                      <i title="rail-color"></i>
+                      <i title="lib-bg"></i>
+                      <i title="lib-panel"></i>
+                      <i title="lib-border"></i>
+                      <i title="alb-active"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slider colors from Accent -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Slider accent</div>
+                <div class="row-ctrl">
+                  <div
+                    style="
+                      display: flex;
+                      gap: 10px;
+                      align-items: center;
+                      flex-wrap: wrap;
+                    "
+                  >
+                    <input id="col-accent" type="color" value="#ff7b95" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="setting-item">
+              <div class="row">
+                <div class="row-label">Visualizer</div>
+                <div class="row-ctrl">
+                  <div
+                    style="
+                      display: flex;
+                      gap: 12px;
+                      align-items: center;
+                      flex-wrap: nowrap; /* <-- đổi thành nowrap */
+                      color: var(--lib-text);
+                    "
+                  >
+                    <select id="viz-mode-select" class="select">
+                      <option value="spectrum">Spectrum</option>
+                      <option value="mono">Monochrome</option>
+                    </select>
+                    <input
+                      id="col-viz-mono"
+                      type="color"
+                      value="#ffffff"
+                      style="display: none; margin-left: 8px"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section
+            class="settings-section"
+            id="sec-profile"
+            data-section="profile"
+            data-outline-scope
+          >
+            <h3>Profile</h3>
+
+            <div class="setting-item">
+              <div class="row-ctrl">
+                <div class="skew-wrap">
+                  <input
+                    id="profile-name"
+                    type="text"
+                    placeholder="User name"
+                    autocomplete="nickname"
+                    class="profile-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="settings-section" id="sec-about" data-section="about">
+            <h3>About</h3>
+            <div class="setting-item">Made by Azusa</div>
+          </section>
+        </div>
+      </aside>
+    </div>
+    
+    <!-- Splash intro -->
+<div id="splash" aria-hidden="false">
+  <div class="splash-cta">Click anywhere to start</div>
+
+  <!-- Bars -->
+  <div class="bar bar-center"></div>
+  <div class="bar bar-top"></div>
+  <div class="bar bar-bottom"></div>
+
+  <!-- Text -->
+  <div class="splash-text" id="splash-text">
+    <div class="splash-title">Welcome</div>
+    <div class="splash-name" id="splash-name">Guest</div>
+  </div>
+</div>
+    <!-- Input chọn nhiều file cho Library -->
+    <input
+      id="library-file-input"
+      type="file"
+      accept="audio/*"
+      multiple
+      hidden
+    />
+
+    <script src="script.js"></script>
+  </body>
+</html>
