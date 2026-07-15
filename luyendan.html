@@ -220,14 +220,14 @@
         <div class="actions">
             <div class="algo-selector">
                 <select id="algoSelect">
-                    <option value="brute">Brute Force UCLN </option>
-                    <option value="sa">Simulated Annealing (Luyện kim - Trị hàm ẩn)</option>
-                    <option value="grid"> Coarse Grid Search (Dò lưới không gian)</option>
+                    <option value="brute">Brute Force UCLN</option>
+                    <option value="sa">Simulated Annealing</option>
+                    <option value="grid">Coarse Grid Search</option>
                 </select>
             </div>
             <div class="action-btns">
-                <button class="btn-reset" onclick="resetAll()">reset</button>
-                <button class="btn-calc" id="calcBtn" onclick="calculate()">run</button>
+                <button class="btn-reset" onclick="resetAll()">Reset</button>
+                <button class="btn-calc" id="calcBtn" onclick="calculate()">Run</button>
             </div>
         </div>
 
@@ -255,7 +255,26 @@
         }
     }
 
-    function addRow(x = '', y = '', z = '', err = '') {
+    // --- XỬ LÝ LƯU TRỮ DỮ LIỆU (AUTO-SAVE) ---
+    function saveData() {
+        const rows = document.querySelectorAll('.row');
+        let data = [];
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            data.push({
+                x: inputs[0].value,
+                y: inputs[1].value,
+                z: inputs[2].value,
+                err: inputs[3].value
+            });
+        });
+        localStorage.setItem('cp_data', JSON.stringify(data));
+    }
+
+    // Lắng nghe mọi thay đổi trong khung nhập liệu để lưu tự động
+    dataContainer.addEventListener('input', saveData);
+
+    function addRow(x = '', y = '', z = '', err = '', isSave = true) {
         const row = document.createElement('div');
         row.className = 'row';
         row.innerHTML = `
@@ -263,19 +282,44 @@
             <input type="number" step="any" value="${y}">
             <input type="number" step="any" value="${z}">
             <input type="number" step="any" value="${err}">
-            <button tabindex="-1" class="btn-remove" onclick="if(document.querySelectorAll('.row').length > 1) this.parentElement.remove()">✖</button>
+            <button tabindex="-1" class="btn-remove" onclick="removeRow(this)">✖</button>
         `;
         dataContainer.appendChild(row);
+        if (isSave) saveData();
+    }
+
+    function removeRow(btn) {
+        if (document.querySelectorAll('.row').length > 1) {
+            btn.parentElement.remove();
+            saveData();
+        }
     }
 
     function resetAll() {
         dataContainer.innerHTML = '';
         document.getElementById('resultBox').style.display = 'none';
+        localStorage.removeItem('cp_data'); // Xóa dữ liệu đã lưu
         addRow(); 
         document.querySelector('input').focus();
     }
 
-    // Auto-focus & Add row on Enter (Tối ưu cho thao tác gõ phím nhanh)
+    function loadData() {
+        const savedData = localStorage.getItem('cp_data');
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                if (parsed.length > 0) {
+                    parsed.forEach(item => addRow(item.x, item.y, item.z, item.err, false));
+                    return;
+                }
+            } catch (e) {
+                console.error("Lỗi parse dữ liệu");
+            }
+        }
+        addRow('', '', '', '', false);
+    }
+
+    // Auto-focus & Add row on Enter
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
             e.preventDefault();
@@ -294,7 +338,8 @@
         }
     });
 
-    addRow(); // Init
+    // Khởi tạo dữ liệu khi mở trang
+    loadData();
 
     // --- CÁC HÀM TOÁN HỌC ---
     function gcd3(a, b, c) {
@@ -349,22 +394,20 @@
 
     // 2. Simulated Annealing (Heuristic)
     function runSimulatedAnnealing(records) {
-        let curr_x = 100, curr_y = 100, curr_z = 100; // Khởi tạo ngẫu nhiên
+        let curr_x = 100, curr_y = 100, curr_z = 100;
         let best_x = curr_x, best_y = curr_y, best_z = curr_z;
         let min_loss = calcLoss(records, best_x/300, best_y/300, best_z/300);
         let curr_loss = min_loss;
 
-        let temp = 1000.0; // Nhiệt độ ban đầu
-        const cooling_rate = 0.995; // Tốc độ nguội
+        let temp = 1000.0; 
+        const cooling_rate = 0.995; 
         const min_temp = 1e-5;
 
         while (temp > min_temp) {
-            // Đột biến ngẫu nhiên (Mutation)
             let nx = curr_x + Math.floor((Math.random() - 0.5) * temp);
             let ny = curr_y + Math.floor((Math.random() - 0.5) * temp);
             let nz = curr_z + Math.floor((Math.random() - 0.5) * temp);
             
-            // Ép vào biên [0, 200]
             nx = Math.max(0, Math.min(200, nx));
             ny = Math.max(0, Math.min(200, ny));
             nz = Math.max(0, Math.min(200, nz));
@@ -374,7 +417,6 @@
             let sum = nx + ny + nz;
             let n_loss = calcLoss(records, nx/sum, ny/sum, nz/sum);
 
-            // Quyết định chấp nhận trạng thái mới
             if (n_loss < curr_loss || Math.exp((curr_loss - n_loss) / temp) > Math.random()) {
                 curr_x = nx; curr_y = ny; curr_z = nz;
                 curr_loss = n_loss;
@@ -386,7 +428,6 @@
             }
             temp *= cooling_rate;
         }
-        // Chuẩn hóa tối giản (UCLN)
         let div = gcd3(best_x, best_y, best_z);
         return {x: best_x/div, y: best_y/div, z: best_z/div};
     }
@@ -397,7 +438,6 @@
         let global_min_loss = Infinity;
         let step = 0.1;
 
-        // Tìm liên tục 4 lần zoom
         for (let iter = 0; iter < 4; iter++) {
             let t_tx = best_tx, t_ty = best_ty;
             for (let tx = Math.max(0, best_tx - step * 5); tx <= Math.min(1, best_tx + step * 5); tx += step) {
@@ -412,14 +452,13 @@
                 }
             }
             best_tx = t_tx; best_ty = t_ty;
-            step /= 5.0; // Zoom in
+            step /= 5.0; 
         }
 
         let best_tz = 1.0 - best_tx - best_ty;
         let final_x = 0, final_y = 0, final_z = 0;
         let match_err = Infinity;
 
-        // Map sang phân số
         for (let sum = 1; sum <= 600; ++sum) {
             let cx = Math.round(best_tx * sum);
             let cy = Math.round(best_ty * sum);
@@ -470,7 +509,7 @@
             resultBox.innerHTML = `X = ${result.x}  |  Y = ${result.y}  |  Z = ${result.z}`;
             resultBox.style.display = 'block';
 
-            btn.innerHTML = 'run';
+            btn.innerHTML = 'Run';
             btn.disabled = false;
         }, 30);
     }
