@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tối Ưu Tọa Độ XYZ</title>
+    <title>CP Optimization Tool</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -18,7 +18,6 @@
             --success: #10b981;
             --success-hover: #059669;
             --input-bg: #f8fafc;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
@@ -34,10 +33,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Consolas', 'Segoe UI', monospace, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            transition: background-color 0.4s ease, color 0.4s ease;
+            transition: background-color 0.3s, color 0.3s;
             line-height: 1.6;
         }
 
@@ -49,80 +48,54 @@
 
         header {
             display: flex;
-            justify-content: flex-end; /* Đẩy nút toggle sang phải, xóa tiêu đề */
-            align-items: center;
+            justify-content: flex-end;
             margin-bottom: 1.5rem;
         }
 
-        /* ----- TOGGLE SWITCH STYLES ----- */
+        /* ----- TOGGLE SWITCH ----- */
         .theme-switch {
             position: relative;
             display: inline-block;
             width: 54px;
             height: 30px;
         }
-        
-        .theme-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
             background-color: #cbd5e0;
-            transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: .4s;
             border-radius: 34px;
         }
-
         .slider:before {
             position: absolute;
             content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
+            height: 22px; width: 22px;
+            left: 4px; bottom: 4px;
             background-color: white;
-            transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: .4s;
             border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-
-        input:checked + .slider {
-            background-color: #6366f1; /* Màu xanh tím giống ảnh của bạn */
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(24px);
-        }
-        /* -------------------------------- */
+        input:checked + .slider { background-color: #6366f1; }
+        input:checked + .slider:before { transform: translateX(24px); }
 
         .card {
             background-color: var(--card-bg);
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 2rem;
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border-color);
-            transition: background-color 0.4s ease, border-color 0.4s ease;
         }
 
-        button {
-            cursor: pointer;
-            border: none;
-            border-radius: 8px;
-            padding: 0.7rem 1.2rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        /* Ẩn Spin Buttons (mũi tên lên xuống) của thẻ input number */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
-
-        button:active { transform: scale(0.97); }
+        input[type="number"] { -moz-appearance: textfield; }
 
         .row {
             display: grid;
@@ -130,76 +103,97 @@
             gap: 12px;
             margin-bottom: 12px;
             align-items: center;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         input {
             width: 100%;
             padding: 0.7rem;
             border: 2px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 6px;
             background-color: var(--input-bg);
             color: var(--text-main);
             font-size: 1rem;
+            font-family: 'Consolas', monospace;
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
-
-        input:focus { 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-        }
-
-        .btn-add { background-color: var(--success); color: white; width: 100%; margin-bottom: 1.5rem; }
-        .btn-add:hover { background-color: var(--success-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        
-        .btn-remove { background-color: transparent; color: var(--danger); font-size: 1.2rem; padding: 0.4rem; opacity: 0.7; }
-        .btn-remove:hover { color: var(--danger-hover); opacity: 1; transform: scale(1.1); }
-
-        .actions { display: flex; gap: 1rem; margin-top: 1rem; }
-
-        .btn-calc { background-color: var(--primary); color: white; flex: 1; font-size: 1.1rem; padding: 0.9rem; }
-        .btn-calc:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-
-        .btn-reset { background-color: var(--danger); color: white; padding: 0.9rem 1.5rem; }
-        .btn-reset:hover { background-color: var(--danger-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-
-        .result-box {
-            display: none;
-            text-align: center;
-            background: rgba(16, 185, 129, 0.1);
-            border: 2px dashed var(--success);
-            color: var(--success);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-top: 1.5rem;
-            font-size: 1.4rem;
-            font-weight: bold;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.9); }
-            100% { opacity: 1; transform: scale(1); }
-        }
+        input:focus { border-color: var(--primary); }
 
         .col-headers {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1.5fr auto;
             gap: 12px;
             margin-bottom: 0.8rem;
-            font-weight: 600;
+            font-weight: bold;
             color: var(--text-muted);
-            font-size: 0.9rem;
             text-align: center;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            padding: 0.7rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+
+        .btn-remove { background: none; color: var(--danger); font-size: 1.2rem; opacity: 0.7; }
+        .btn-remove:hover { opacity: 1; }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .algo-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
         
-        .header-item { display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .algo-selector select {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
+        }
+        .algo-selector select:focus { border-color: var(--primary); }
+
+        .action-btns { display: flex; gap: 1rem; }
+        .btn-calc { background-color: var(--primary); color: white; flex: 1; padding: 1rem; font-size: 1.1rem; }
+        .btn-calc:hover { background-color: var(--primary-hover); }
+        .btn-reset { background-color: transparent; border: 2px solid var(--danger); color: var(--danger); }
+        .btn-reset:hover { background-color: var(--danger); color: white; }
+
+        .result-box {
+            display: none;
+            text-align: center;
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success);
+            color: var(--success);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: 'Consolas', monospace;
+        }
     </style>
 </head>
 <body>
@@ -213,25 +207,28 @@
     </header>
 
     <div class="card">
-        <h2 style="font-size: 1.3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
-            📝 Nhập dữ liệu tọa độ
-        </h2>
-        
         <div class="col-headers">
-            <div class="header-item">🔴 X</div>
-            <div class="header-item">🟢 Y</div>
-            <div class="header-item">🔵 Z</div>
-            <div class="header-item">⚖️ Sai lệch</div>
-            <div style="width: 40px;"></div>
+            <div>X</div>
+            <div>Y</div>
+            <div>Z</div>
+            <div>Sai lệch</div>
+            <div style="width: 30px;"></div>
         </div>
         
         <div id="dataContainer"></div>
-        
-        <button class="btn-add" onclick="addRow()">➕ Thêm dòng dữ liệu</button>
 
         <div class="actions">
-            <button class="btn-reset" onclick="resetAll()">🔄 Reset</button>
-            <button class="btn-calc" id="calcBtn" onclick="calculate()">🚀 Tính Toán Tối Ưu</button>
+            <div class="algo-selector">
+                <select id="algoSelect">
+                    <option value="brute">⚡ Brute Force UCLN (100% Chính xác)</option>
+                    <option value="sa">🔥 Simulated Annealing (Luyện kim - Trị hàm ẩn)</option>
+                    <option value="grid">🕸️ Coarse Grid Search (Dò lưới không gian)</option>
+                </select>
+            </div>
+            <div class="action-btns">
+                <button class="btn-reset" onclick="resetAll()">Làm mới</button>
+                <button class="btn-calc" id="calcBtn" onclick="calculate()">Thực thi thuật toán</button>
+            </div>
         </div>
 
         <div class="result-box" id="resultBox"></div>
@@ -239,12 +236,11 @@
 </div>
 
 <script>
-    // --- GIAO DIỆN & SỰ KIỆN ---
     const dataContainer = document.getElementById('dataContainer');
     const toggleCheckbox = document.getElementById('themeToggleCheckbox');
 
-    // Load Theme
-    if (localStorage.getItem('xyz_theme') === 'dark') {
+    // Theme Config
+    if (localStorage.getItem('cp_theme') === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         toggleCheckbox.checked = true;
     }
@@ -252,10 +248,10 @@
     function toggleTheme() {
         if (toggleCheckbox.checked) {
             document.documentElement.setAttribute('data-theme', 'dark');
-            localStorage.setItem('xyz_theme', 'dark');
+            localStorage.setItem('cp_theme', 'dark');
         } else {
             document.documentElement.removeAttribute('data-theme');
-            localStorage.setItem('xyz_theme', 'light');
+            localStorage.setItem('cp_theme', 'light');
         }
     }
 
@@ -263,11 +259,11 @@
         const row = document.createElement('div');
         row.className = 'row';
         row.innerHTML = `
-            <input type="number" step="any" placeholder="0" value="${x}">
-            <input type="number" step="any" placeholder="0" value="${y}">
-            <input type="number" step="any" placeholder="0" value="${z}">
-            <input type="number" step="any" placeholder="0.0" value="${err}">
-            <button class="btn-remove" onclick="this.parentElement.remove()" title="Xóa dòng">✖</button>
+            <input type="number" step="any" value="${x}">
+            <input type="number" step="any" value="${y}">
+            <input type="number" step="any" value="${z}">
+            <input type="number" step="any" value="${err}">
+            <button tabindex="-1" class="btn-remove" onclick="if(document.querySelectorAll('.row').length > 1) this.parentElement.remove()">✖</button>
         `;
         dataContainer.appendChild(row);
     }
@@ -275,11 +271,11 @@
     function resetAll() {
         dataContainer.innerHTML = '';
         document.getElementById('resultBox').style.display = 'none';
-        addRow(); // Reset về 1 dòng trống
+        addRow(); 
         document.querySelector('input').focus();
     }
 
-    // Sự kiện Enter để nhảy ô nhập liệu
+    // Auto-focus & Add row on Enter (Tối ưu cho thao tác gõ phím nhanh)
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
             e.preventDefault();
@@ -288,10 +284,8 @@
             
             if (index > -1) {
                 if (index < inputs.length - 1) {
-                    // Nhảy sang ô tiếp theo
                     inputs[index + 1].focus();
                 } else {
-                    // Nếu là ô cuối cùng -> Tự động thêm dòng mới và trỏ vào ô đầu tiên của dòng đó
                     addRow();
                     const newInputs = document.querySelectorAll('#dataContainer input');
                     newInputs[newInputs.length - 4].focus();
@@ -300,43 +294,149 @@
         }
     });
 
-    // Khởi tạo ban đầu
-    addRow();
+    addRow(); // Init
 
-    // --- THUẬT TOÁN TÍNH TOÁN ---
-    function gcd(a, b) {
-        while (b !== 0) {
-            let temp = b;
-            b = a % b;
-            a = temp;
-        }
-        return a;
+    // --- CÁC HÀM TOÁN HỌC ---
+    function gcd3(a, b, c) {
+        let gcd = (x, y) => {
+            while (y !== 0) { let t = y; y = x % y; x = t; }
+            return x;
+        };
+        return gcd(a, gcd(b, c));
     }
-
-    function gcd3(a, b, c) { return gcd(a, gcd(b, c)); }
 
     function calcLoss(data, tx, ty, tz) {
         let sum_DE = 0.0, sum_D2 = 0.0;
         let n = data.length;
-        let dis = new Float64Array(n);
-        
         for (let i = 0; i < n; ++i) {
             let dx = data[i].px - tx, dy = data[i].py - ty, dz = data[i].pz - tz;
-            dis[i] = Math.sqrt(dx*dx + dy*dy + dz*dz);
-            sum_DE += dis[i] * data[i].err;
-            sum_D2 += dis[i] * dis[i];
+            let dis = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            sum_DE += dis * data[i].err;
+            sum_D2 += dis * dis;
         }
         if (sum_D2 === 0) return 0.0;
-        
         let best_k = sum_DE / sum_D2;
         let loss = 0.0;
         for (let i = 0; i < n; ++i) {
-            let diff = data[i].err - (best_k * dis[i]);
+            let dis = Math.sqrt(Math.pow(data[i].px - tx, 2) + Math.pow(data[i].py - ty, 2) + Math.pow(data[i].pz - tz, 2));
+            let diff = data[i].err - (best_k * dis);
             loss += diff * diff;
         }
         return loss;
     }
 
+    // --- KHỐI THUẬT TOÁN (ALGORITHMS) ---
+
+    // 1. O(N^3) Brute Force
+    function runBruteForce(records) {
+        let min_loss = Infinity;
+        let fx = 0, fy = 0, fz = 0;
+        for (let x = 0; x <= 200; ++x) {
+            for (let y = 0; y <= 200; ++y) {
+                for (let z = 0; z <= 200; ++z) {
+                    if (x === 0 && y === 0 && z === 0) continue;
+                    if (gcd3(x, y, z) !== 1) continue;
+                    let sum = x + y + z;
+                    let loss = calcLoss(records, x/sum, y/sum, z/sum);
+                    if (loss < min_loss) {
+                        min_loss = loss; fx = x; fy = y; fz = z;
+                    }
+                }
+            }
+        }
+        return {x: fx, y: fy, z: fz};
+    }
+
+    // 2. Simulated Annealing (Heuristic)
+    function runSimulatedAnnealing(records) {
+        let curr_x = 100, curr_y = 100, curr_z = 100; // Khởi tạo ngẫu nhiên
+        let best_x = curr_x, best_y = curr_y, best_z = curr_z;
+        let min_loss = calcLoss(records, best_x/300, best_y/300, best_z/300);
+        let curr_loss = min_loss;
+
+        let temp = 1000.0; // Nhiệt độ ban đầu
+        const cooling_rate = 0.995; // Tốc độ nguội
+        const min_temp = 1e-5;
+
+        while (temp > min_temp) {
+            // Đột biến ngẫu nhiên (Mutation)
+            let nx = curr_x + Math.floor((Math.random() - 0.5) * temp);
+            let ny = curr_y + Math.floor((Math.random() - 0.5) * temp);
+            let nz = curr_z + Math.floor((Math.random() - 0.5) * temp);
+            
+            // Ép vào biên [0, 200]
+            nx = Math.max(0, Math.min(200, nx));
+            ny = Math.max(0, Math.min(200, ny));
+            nz = Math.max(0, Math.min(200, nz));
+            
+            if (nx === 0 && ny === 0 && nz === 0) { nx=1; }
+
+            let sum = nx + ny + nz;
+            let n_loss = calcLoss(records, nx/sum, ny/sum, nz/sum);
+
+            // Quyết định chấp nhận trạng thái mới
+            if (n_loss < curr_loss || Math.exp((curr_loss - n_loss) / temp) > Math.random()) {
+                curr_x = nx; curr_y = ny; curr_z = nz;
+                curr_loss = n_loss;
+                
+                if (n_loss < min_loss) {
+                    min_loss = n_loss;
+                    best_x = nx; best_y = ny; best_z = nz;
+                }
+            }
+            temp *= cooling_rate;
+        }
+        // Chuẩn hóa tối giản (UCLN)
+        let div = gcd3(best_x, best_y, best_z);
+        return {x: best_x/div, y: best_y/div, z: best_z/div};
+    }
+
+    // 3. Coarse-to-fine Grid Search
+    function runGridSearch(records) {
+        let best_tx = 0.33, best_ty = 0.33;
+        let global_min_loss = Infinity;
+        let step = 0.1;
+
+        // Tìm liên tục 4 lần zoom
+        for (let iter = 0; iter < 4; iter++) {
+            let t_tx = best_tx, t_ty = best_ty;
+            for (let tx = Math.max(0, best_tx - step * 5); tx <= Math.min(1, best_tx + step * 5); tx += step) {
+                for (let ty = Math.max(0, best_ty - step * 5); ty <= Math.min(1, best_ty + step * 5); ty += step) {
+                    if (tx + ty > 1.0) continue;
+                    let tz = 1.0 - tx - ty;
+                    let loss = calcLoss(records, tx, ty, tz);
+                    if (loss < global_min_loss) {
+                        global_min_loss = loss;
+                        t_tx = tx; t_ty = ty;
+                    }
+                }
+            }
+            best_tx = t_tx; best_ty = t_ty;
+            step /= 5.0; // Zoom in
+        }
+
+        let best_tz = 1.0 - best_tx - best_ty;
+        let final_x = 0, final_y = 0, final_z = 0;
+        let match_err = Infinity;
+
+        // Map sang phân số
+        for (let sum = 1; sum <= 600; ++sum) {
+            let cx = Math.round(best_tx * sum);
+            let cy = Math.round(best_ty * sum);
+            let cz = sum - cx - cy;
+            if (cx >= 0 && cx <= 200 && cy >= 0 && cy <= 200 && cz >= 0 && cz <= 200) {
+                let err = Math.abs(cx/sum - best_tx) + Math.abs(cy/sum - best_ty) + Math.abs(cz/sum - best_tz);
+                if (err < match_err) {
+                    match_err = err;
+                    final_x = cx; final_y = cy; final_z = cz;
+                }
+            }
+        }
+        let div = gcd3(final_x, final_y, final_z);
+        return {x: final_x/div, y: final_y/div, z: final_z/div};
+    }
+
+    // --- MAIN EXECUTION ---
     function calculate() {
         const rows = document.querySelectorAll('.row');
         let records = [];
@@ -349,50 +449,30 @@
             let err = parseFloat(inputs[3].value) || 0;
             
             let total = x + y + z;
-            if (total > 0) {
-                records.push({ px: x/total, py: y/total, pz: z/total, err: err });
-            }
+            if (total > 0) records.push({ px: x/total, py: y/total, pz: z/total, err: err });
         });
 
-        if (records.length === 0) {
-            alert('Vui lòng nhập ít nhất 1 dòng dữ liệu hợp lệ (Tổng X+Y+Z > 0)!');
-            return;
-        }
+        if (records.length === 0) return;
 
         const btn = document.getElementById('calcBtn');
-        btn.innerHTML = '⏳ Đang xử lý...';
+        btn.innerHTML = 'Executing...';
         btn.disabled = true;
 
         setTimeout(() => {
-            let min_loss = Infinity;
-            let final_x = 0, final_y = 0, final_z = 0;
+            let algo = document.getElementById('algoSelect').value;
+            let result;
 
-            for (let x = 0; x <= 200; ++x) {
-                for (let y = 0; y <= 200; ++y) {
-                    for (let z = 0; z <= 200; ++z) {
-                        if (x === 0 && y === 0 && z === 0) continue;
-                        if (gcd3(x, y, z) !== 1) continue;
-
-                        let sum = x + y + z;
-                        let loss = calcLoss(records, x/sum, y/sum, z/sum);
-
-                        if (loss < min_loss) {
-                            min_loss = loss;
-                            final_x = x;
-                            final_y = y;
-                            final_z = z;
-                        }
-                    }
-                }
-            }
+            if (algo === 'brute') result = runBruteForce(records);
+            else if (algo === 'sa') result = runSimulatedAnnealing(records);
+            else result = runGridSearch(records);
 
             const resultBox = document.getElementById('resultBox');
-            resultBox.innerHTML = `🎯 KẾT QUẢ: <span style="color:var(--text-main)">X = ${final_x} &nbsp;|&nbsp; Y = ${final_y} &nbsp;|&nbsp; Z = ${final_z}</span>`;
+            resultBox.innerHTML = `X = ${result.x}  |  Y = ${result.y}  |  Z = ${result.z}`;
             resultBox.style.display = 'block';
 
-            btn.innerHTML = '🚀 Tính Toán Tối Ưu';
+            btn.innerHTML = 'Thực thi thuật toán';
             btn.disabled = false;
-        }, 50);
+        }, 30);
     }
 </script>
 
