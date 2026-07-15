@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -7,27 +6,29 @@
     <title>Tối Ưu Tọa Độ XYZ</title>
     <style>
         :root {
-            --bg-color: #f3f4f6;
+            --bg-color: #f4f6f9;
             --card-bg: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
             --danger: #ef4444;
             --danger-hover: #dc2626;
             --success: #10b981;
-            --input-bg: #f9fafb;
+            --success-hover: #059669;
+            --input-bg: #f8fafc;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         [data-theme="dark"] {
-            --bg-color: #111827;
-            --card-bg: #1f2937;
-            --text-main: #f9fafb;
-            --text-muted: #9ca3af;
-            --border-color: #374151;
-            --primary: #3b82f6;
-            --input-bg: #374151;
+            --bg-color: #1a202c;
+            --card-bg: #2d3748;
+            --text-main: #f7fafc;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --input-bg: #1a202c;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,7 +37,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.4s ease, color 0.4s ease;
             line-height: 1.6;
         }
 
@@ -48,196 +49,216 @@
 
         header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end; /* Đẩy nút toggle sang phải, xóa tiêu đề */
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
-        h1 { font-size: 1.8rem; font-weight: 600; }
+        /* ----- TOGGLE SWITCH STYLES ----- */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 54px;
+            height: 30px;
+        }
+        
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e0;
+            transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: #6366f1; /* Màu xanh tím giống ảnh của bạn */
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        /* -------------------------------- */
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.4s ease, border-color 0.4s ease;
+        }
 
         button {
             cursor: pointer;
             border: none;
             border-radius: 8px;
-            padding: 0.6rem 1.2rem;
+            padding: 0.7rem 1.2rem;
             font-size: 0.95rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.2s ease;
-        }
-
-        .btn-theme {
-            background: var(--card-bg);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            gap: 8px;
         }
 
-        .btn-theme:hover { transform: scale(1.1); }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
+        button:active { transform: scale(0.97); }
 
         .row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1.5fr auto;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 12px;
             align-items: center;
-            animation: fadeIn 0.3s ease-out;
+            animation: slideDown 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
+        @keyframes slideDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         input {
             width: 100%;
-            padding: 0.6rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+            padding: 0.7rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
             background-color: var(--input-bg);
             color: var(--text-main);
+            font-size: 1rem;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.3s ease;
         }
 
-        input:focus { border-color: var(--primary); }
+        input:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
 
-        .btn-add { background-color: var(--success); color: white; margin-bottom: 1rem; width: 100%; }
-        .btn-add:hover { opacity: 0.9; }
+        .btn-add { background-color: var(--success); color: white; width: 100%; margin-bottom: 1.5rem; }
+        .btn-add:hover { background-color: var(--success-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
         
-        .btn-remove { background-color: transparent; color: var(--danger); font-size: 1.2rem; padding: 0.2rem 0.5rem; }
-        .btn-remove:hover { color: var(--danger-hover); transform: scale(1.1); }
+        .btn-remove { background-color: transparent; color: var(--danger); font-size: 1.2rem; padding: 0.4rem; opacity: 0.7; }
+        .btn-remove:hover { color: var(--danger-hover); opacity: 1; transform: scale(1.1); }
 
-        .actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
+        .actions { display: flex; gap: 1rem; margin-top: 1rem; }
 
-        .btn-calc { background-color: var(--primary); color: white; flex: 1; font-size: 1.1rem; padding: 0.8rem; }
-        .btn-calc:hover { background-color: var(--primary-hover); }
+        .btn-calc { background-color: var(--primary); color: white; flex: 1; font-size: 1.1rem; padding: 0.9rem; }
+        .btn-calc:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
-        .btn-reset { background-color: var(--danger); color: white; }
-        .btn-reset:hover { background-color: var(--danger-hover); }
+        .btn-reset { background-color: var(--danger); color: white; padding: 0.9rem 1.5rem; }
+        .btn-reset:hover { background-color: var(--danger-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
         .result-box {
             display: none;
             text-align: center;
             background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--success);
+            border: 2px dashed var(--success);
             color: var(--success);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
-            font-size: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            font-size: 1.4rem;
             font-weight: bold;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .history-list { list-style: none; }
-        .history-item {
-            background-color: var(--input-bg);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 0.8rem;
-            border: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
         }
-        .history-item .details { font-size: 0.9rem; color: var(--text-muted); }
-        .history-item .result { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
 
-        /* Tiêu đề cột */
         .col-headers {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1.5fr auto;
-            gap: 10px;
-            margin-bottom: 0.5rem;
+            gap: 12px;
+            margin-bottom: 0.8rem;
             font-weight: 600;
             color: var(--text-muted);
             font-size: 0.9rem;
             text-align: center;
         }
+        
+        .header-item { display: flex; align-items: center; justify-content: center; gap: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>🎯 Tối Ưu Hóa Tọa Độ</h1>
-        <button class="btn-theme" id="themeToggle" onclick="toggleTheme()">🌙</button>
+        <label class="theme-switch">
+            <input type="checkbox" id="themeToggleCheckbox" onchange="toggleTheme()">
+            <span class="slider"></span>
+        </label>
     </header>
 
     <div class="card">
-        <h2 style="font-size: 1.2rem; margin-bottom: 1rem;">Nhập dữ liệu</h2>
+        <h2 style="font-size: 1.3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+            📝 Nhập dữ liệu tọa độ
+        </h2>
+        
         <div class="col-headers">
-            <div>X</div>
-            <div>Y</div>
-            <div>Z</div>
-            <div>Sai lệch</div>
-            <div style="width: 30px;"></div>
+            <div class="header-item">🔴 X</div>
+            <div class="header-item">🟢 Y</div>
+            <div class="header-item">🔵 Z</div>
+            <div class="header-item">⚖️ Sai lệch</div>
+            <div style="width: 40px;"></div>
         </div>
         
         <div id="dataContainer"></div>
         
-        <button class="btn-add" onclick="addRow()">+ Thêm dòng dữ liệu</button>
+        <button class="btn-add" onclick="addRow()">➕ Thêm dòng dữ liệu</button>
 
         <div class="actions">
             <button class="btn-reset" onclick="resetAll()">🔄 Reset</button>
-            <button class="btn-calc" id="calcBtn" onclick="calculate()">🚀 Tính Toán</button>
+            <button class="btn-calc" id="calcBtn" onclick="calculate()">🚀 Tính Toán Tối Ưu</button>
         </div>
 
         <div class="result-box" id="resultBox"></div>
     </div>
-
-    <div class="card">
-        <h2 style="font-size: 1.2rem; margin-bottom: 1rem;">📜 Lịch sử tìm kiếm</h2>
-        <ul class="history-list" id="historyList">
-            <!-- Lịch sử sẽ hiện ở đây -->
-        </ul>
-    </div>
 </div>
 
 <script>
-    // --- KHỞI TẠO ---
+    // --- GIAO DIỆN & SỰ KIỆN ---
     const dataContainer = document.getElementById('dataContainer');
-    let historyData = JSON.parse(localStorage.getItem('xyz_history')) || [];
+    const toggleCheckbox = document.getElementById('themeToggleCheckbox');
 
-    // Theme Load
+    // Load Theme
     if (localStorage.getItem('xyz_theme') === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        document.getElementById('themeToggle').innerText = '☀️';
+        toggleCheckbox.checked = true;
     }
 
     function toggleTheme() {
-        const root = document.documentElement;
-        if (root.getAttribute('data-theme') === 'dark') {
-            root.removeAttribute('data-theme');
-            localStorage.setItem('xyz_theme', 'light');
-            document.getElementById('themeToggle').innerText = '🌙';
-        } else {
-            root.setAttribute('data-theme', 'dark');
+        if (toggleCheckbox.checked) {
+            document.documentElement.setAttribute('data-theme', 'dark');
             localStorage.setItem('xyz_theme', 'dark');
-            document.getElementById('themeToggle').innerText = '☀️';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('xyz_theme', 'light');
         }
     }
 
-    // --- XỬ LÝ GIAO DIỆN ---
     function addRow(x = '', y = '', z = '', err = '') {
         const row = document.createElement('div');
         row.className = 'row';
@@ -246,7 +267,7 @@
             <input type="number" step="any" placeholder="0" value="${y}">
             <input type="number" step="any" placeholder="0" value="${z}">
             <input type="number" step="any" placeholder="0.0" value="${err}">
-            <button class="btn-remove" onclick="this.parentElement.remove()" title="Xóa">✖</button>
+            <button class="btn-remove" onclick="this.parentElement.remove()" title="Xóa dòng">✖</button>
         `;
         dataContainer.appendChild(row);
     }
@@ -254,10 +275,35 @@
     function resetAll() {
         dataContainer.innerHTML = '';
         document.getElementById('resultBox').style.display = 'none';
-        addRow(); // Thêm 1 dòng trống mặc định
+        addRow(); // Reset về 1 dòng trống
+        document.querySelector('input').focus();
     }
 
-    // --- THUẬT TOÁN VÉT CẠN TỐI ƯU ---
+    // Sự kiện Enter để nhảy ô nhập liệu
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+            e.preventDefault();
+            const inputs = Array.from(document.querySelectorAll('#dataContainer input'));
+            const index = inputs.indexOf(e.target);
+            
+            if (index > -1) {
+                if (index < inputs.length - 1) {
+                    // Nhảy sang ô tiếp theo
+                    inputs[index + 1].focus();
+                } else {
+                    // Nếu là ô cuối cùng -> Tự động thêm dòng mới và trỏ vào ô đầu tiên của dòng đó
+                    addRow();
+                    const newInputs = document.querySelectorAll('#dataContainer input');
+                    newInputs[newInputs.length - 4].focus();
+                }
+            }
+        }
+    });
+
+    // Khởi tạo ban đầu
+    addRow();
+
+    // --- THUẬT TOÁN TÍNH TOÁN ---
     function gcd(a, b) {
         while (b !== 0) {
             let temp = b;
@@ -267,9 +313,7 @@
         return a;
     }
 
-    function gcd3(a, b, c) {
-        return gcd(a, gcd(b, c));
-    }
+    function gcd3(a, b, c) { return gcd(a, gcd(b, c)); }
 
     function calcLoss(data, tx, ty, tz) {
         let sum_DE = 0.0, sum_D2 = 0.0;
@@ -297,7 +341,6 @@
         const rows = document.querySelectorAll('.row');
         let records = [];
 
-        // Thu thập dữ liệu
         rows.forEach(row => {
             const inputs = row.querySelectorAll('input');
             let x = parseFloat(inputs[0].value) || 0;
@@ -317,15 +360,13 @@
         }
 
         const btn = document.getElementById('calcBtn');
-        btn.innerText = '⏳ Đang tính toán...';
+        btn.innerHTML = '⏳ Đang xử lý...';
         btn.disabled = true;
 
-        // Cho phép UI render trạng thái loading trước khi vòng lặp khóa luồng chính
         setTimeout(() => {
             let min_loss = Infinity;
             let final_x = 0, final_y = 0, final_z = 0;
 
-            // Vòng lặp quét UCLN < 200 (Khoảng vài trăm nghìn bước - JS chạy mất ~0.1s)
             for (let x = 0; x <= 200; ++x) {
                 for (let y = 0; y <= 200; ++y) {
                     for (let z = 0; z <= 200; ++z) {
@@ -345,55 +386,14 @@
                 }
             }
 
-            // Hiển thị kết quả
             const resultBox = document.getElementById('resultBox');
-            const resStr = `X = ${final_x} &nbsp;|&nbsp; Y = ${final_y} &nbsp;|&nbsp; Z = ${final_z}`;
-            resultBox.innerHTML = `🎉 KẾT QUẢ TỐI ƯU 🎉<br>${resStr}`;
+            resultBox.innerHTML = `🎯 KẾT QUẢ: <span style="color:var(--text-main)">X = ${final_x} &nbsp;|&nbsp; Y = ${final_y} &nbsp;|&nbsp; Z = ${final_z}</span>`;
             resultBox.style.display = 'block';
 
-            // Lưu lịch sử
-            saveHistory(records.length, final_x, final_y, final_z);
-
-            // Khôi phục nút
-            btn.innerText = '🚀 Tính Toán';
+            btn.innerHTML = '🚀 Tính Toán Tối Ưu';
             btn.disabled = false;
         }, 50);
     }
-
-    // --- LỊCH SỬ ---
-    function saveHistory(n, x, y, z) {
-        const time = new Date().toLocaleTimeString('vi-VN');
-        const newItem = { time, n, x, y, z };
-        historyData.unshift(newItem); // Thêm lên đầu
-        if (historyData.length > 5) historyData.pop(); // Giữ tối đa 5 lịch sử
-        
-        localStorage.setItem('xyz_history', JSON.stringify(historyData));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('historyList');
-        if (historyData.length === 0) {
-            list.innerHTML = '<li class="history-item"><div class="details">Chưa có lịch sử tính toán.</div></li>';
-            return;
-        }
-        
-        list.innerHTML = historyData.map(item => `
-            <li class="history-item">
-                <div class="details">
-                    🕒 ${item.time} <br>
-                    📊 Dữ liệu: ${item.n} dòng
-                </div>
-                <div class="result">
-                    X=${item.x}, Y=${item.y}, Z=${item.z}
-                </div>
-            </li>
-        `).join('');
-    }
-
-    // Khởi tạo ban đầu
-    addRow();
-    renderHistory();
 </script>
 
 </body>
