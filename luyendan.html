@@ -226,7 +226,7 @@
                 </select>
             </div>
             <div class="action-btns">
-                <button class="btn-reset" onclick="resetAll()">Làm mới</button>
+                <button class="btn-reset" onclick="resetAll()">reset</button>
                 <button class="btn-calc" id="calcBtn" onclick="calculate()">Thực thi thuật toán</button>
             </div>
         </div>
@@ -470,7 +470,7 @@
             resultBox.innerHTML = `X = ${result.x}  |  Y = ${result.y}  |  Z = ${result.z}`;
             resultBox.style.display = 'block';
 
-            btn.innerHTML = 'Thực thi thuật toán';
+            btn.innerHTML = 'run';
             btn.disabled = false;
         }, 30);
     }
