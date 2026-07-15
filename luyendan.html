@@ -16,7 +16,6 @@
             --danger: #ef4444;
             --danger-hover: #dc2626;
             --success: #10b981;
-            --success-hover: #059669;
             --input-bg: #f8fafc;
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
@@ -52,7 +51,6 @@
             margin-bottom: 1.5rem;
         }
 
-        /* ----- TOGGLE SWITCH ----- */
         .theme-switch {
             position: relative;
             display: inline-block;
@@ -89,7 +87,6 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Ẩn Spin Buttons (mũi tên lên xuống) của thẻ input number */
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -143,7 +140,7 @@
         }
         button:active { transform: scale(0.98); }
 
-        .btn-remove { background: none; color: var(--danger); font-size: 1.2rem; opacity: 0.7; }
+        .btn-remove { background: none; color: var(--danger); font-size: 1.2rem; opacity: 0.7; padding: 0 0.5rem; }
         .btn-remove:hover { opacity: 1; }
 
         .actions {
@@ -176,9 +173,9 @@
         .algo-selector select:focus { border-color: var(--primary); }
 
         .action-btns { display: flex; gap: 1rem; }
-        .btn-calc { background-color: var(--primary); color: white; flex: 1; padding: 1rem; font-size: 1.1rem; }
+        .btn-calc { background-color: var(--primary); color: white; flex: 1; padding: 1rem; font-size: 1.1rem; text-transform: uppercase;}
         .btn-calc:hover { background-color: var(--primary-hover); }
-        .btn-reset { background-color: transparent; border: 2px solid var(--danger); color: var(--danger); }
+        .btn-reset { background-color: transparent; border: 2px solid var(--danger); color: var(--danger); text-transform: uppercase;}
         .btn-reset:hover { background-color: var(--danger); color: white; }
 
         .result-box {
@@ -239,7 +236,6 @@
     const dataContainer = document.getElementById('dataContainer');
     const toggleCheckbox = document.getElementById('themeToggleCheckbox');
 
-    // Theme Config
     if (localStorage.getItem('cp_theme') === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         toggleCheckbox.checked = true;
@@ -255,24 +251,26 @@
         }
     }
 
-    // --- XỬ LÝ LƯU TRỮ DỮ LIỆU (AUTO-SAVE) ---
     function saveData() {
         const rows = document.querySelectorAll('.row');
         let data = [];
         rows.forEach(row => {
             const inputs = row.querySelectorAll('input');
-            data.push({
-                x: inputs[0].value,
-                y: inputs[1].value,
-                z: inputs[2].value,
-                err: inputs[3].value
-            });
+            if (inputs[0].value || inputs[1].value || inputs[2].value || inputs[3].value) {
+                data.push({
+                    x: inputs[0].value,
+                    y: inputs[1].value,
+                    z: inputs[2].value,
+                    err: inputs[3].value
+                });
+            }
         });
-        localStorage.setItem('cp_data', JSON.stringify(data));
+        localStorage.setItem('cp_data_v2', JSON.stringify(data));
     }
 
-    // Lắng nghe mọi thay đổi trong khung nhập liệu để lưu tự động
     dataContainer.addEventListener('input', saveData);
+    dataContainer.addEventListener('change', saveData);
+    window.addEventListener('beforeunload', saveData);
 
     function addRow(x = '', y = '', z = '', err = '', isSave = true) {
         const row = document.createElement('div');
@@ -298,30 +296,28 @@
     function resetAll() {
         dataContainer.innerHTML = '';
         document.getElementById('resultBox').style.display = 'none';
-        localStorage.removeItem('cp_data'); // Xóa dữ liệu đã lưu
+        localStorage.removeItem('cp_data_v2'); 
         addRow(); 
         document.querySelector('input').focus();
     }
 
     function loadData() {
-        const savedData = localStorage.getItem('cp_data');
+        const savedData = localStorage.getItem('cp_data_v2');
         if (savedData) {
             try {
                 const parsed = JSON.parse(savedData);
-                if (parsed.length > 0) {
+                if (parsed && parsed.length > 0) {
                     parsed.forEach(item => addRow(item.x, item.y, item.z, item.err, false));
                     return;
                 }
-            } catch (e) {
-                console.error("Lỗi parse dữ liệu");
-            }
+            } catch (e) {}
         }
         addRow('', '', '', '', false);
     }
 
-    // Auto-focus & Add row on Enter
+    // Tích hợp phím Space và Enter để chuyển ô
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName === 'INPUT') {
             e.preventDefault();
             const inputs = Array.from(document.querySelectorAll('#dataContainer input'));
             const index = inputs.indexOf(e.target);
@@ -338,10 +334,8 @@
         }
     });
 
-    // Khởi tạo dữ liệu khi mở trang
     loadData();
 
-    // --- CÁC HÀM TOÁN HỌC ---
     function gcd3(a, b, c) {
         let gcd = (x, y) => {
             while (y !== 0) { let t = y; y = x % y; x = t; }
@@ -363,16 +357,14 @@
         let best_k = sum_DE / sum_D2;
         let loss = 0.0;
         for (let i = 0; i < n; ++i) {
-            let dis = Math.sqrt(Math.pow(data[i].px - tx, 2) + Math.pow(data[i].py - ty, 2) + Math.pow(data[i].pz - tz, 2));
+            let dx = data[i].px - tx, dy = data[i].py - ty, dz = data[i].pz - tz;
+            let dis = Math.sqrt(dx*dx + dy*dy + dz*dz);
             let diff = data[i].err - (best_k * dis);
             loss += diff * diff;
         }
         return loss;
     }
 
-    // --- KHỐI THUẬT TOÁN (ALGORITHMS) ---
-
-    // 1. O(N^3) Brute Force
     function runBruteForce(records) {
         let min_loss = Infinity;
         let fx = 0, fy = 0, fz = 0;
@@ -392,7 +384,6 @@
         return {x: fx, y: fy, z: fz};
     }
 
-    // 2. Simulated Annealing (Heuristic)
     function runSimulatedAnnealing(records) {
         let curr_x = 100, curr_y = 100, curr_z = 100;
         let best_x = curr_x, best_y = curr_y, best_z = curr_z;
@@ -432,7 +423,6 @@
         return {x: best_x/div, y: best_y/div, z: best_z/div};
     }
 
-    // 3. Coarse-to-fine Grid Search
     function runGridSearch(records) {
         let best_tx = 0.33, best_ty = 0.33;
         let global_min_loss = Infinity;
@@ -475,8 +465,8 @@
         return {x: final_x/div, y: final_y/div, z: final_z/div};
     }
 
-    // --- MAIN EXECUTION ---
     function calculate() {
+        saveData(); 
         const rows = document.querySelectorAll('.row');
         let records = [];
 
